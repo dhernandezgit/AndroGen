@@ -1,0 +1,35 @@
+{
+    "Small": {
+        "probability": 0.9,
+        "motions": {
+            "list": ["SlowDrift"],
+            "probabilities": [1.0]
+          },
+        "measurements": {
+            "mean": 1.0,
+            "std": 0.2
+        }
+    },
+    "Medium": {
+        "probability": 0.08,
+        "motions": {
+            "list": ["SlowDrift"],
+            "probabilities": [1.0]
+          },
+        "measurements": {
+            "mean": 4.0,
+            "std": 0.8
+        }
+    },
+    "Large": {
+        "probability": 0.02,
+        "motions": {
+            "list": ["Stationary"],
+            "probabilities": [1.0]
+          },
+        "measurements": {
+            "mean": 16.0,
+            "std": 2.0
+        }
+    }
+}

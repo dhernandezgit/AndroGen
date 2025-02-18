@@ -1,0 +1,13 @@
+scikit-learn
+scipy
+torch
+torchvision
+opencv-python
+matplotlib
+seaborn
+tqdm
+albumentations
+pylint
+gradio
+gradio_rangeslider
+gradio_image_annotation

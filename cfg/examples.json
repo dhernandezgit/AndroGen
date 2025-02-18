@@ -1,0 +1,92 @@
+{
+    "style_adjustment": [
+        {"files": "resources/examples/predefined_background/VISEM",
+         "filter_images": true,
+         "contrast": 0.3,
+         "brightness": 0.1,
+         "horizontal_flip": true,
+         "vertical_flip": true,
+         "annotation": "resources/examples/predefined_background/VISEM/22_frame_16.jpg",
+         "spermatozoon_head_color": "rgba(79, 75, 88, 1)",
+         "spermatozoon_head_highlight_color": "rgba(252, 239, 255, 1)",
+         "spermatozoon_neck_color": "rgba(42, 42, 42, 1)",
+         "spermatozoon_tail_color": "rgba(64, 59, 64, 1)",
+         "spermatozoon_droplet_color": "rgba(42, 37, 41, 1)",
+         "debris_color": "rgba(20, 16, 31, 1)",
+         "shadow_start_color": "rgba(184, 181, 181, 1)",
+         "shadow_end_color": "rgba(113, 104, 97, 1)",
+         "spermatozoon_scale_slider": 3.5,
+         "shadow_offset_slider": -8,
+         "shadow_scale_slider": 3,
+         "n_points_render_slider": 100
+        },
+        {"files": "resources/examples/predefined_background/SVIA",
+         "filter_images": true, 
+         "contrast": 0.1,
+         "brightness": 0.1,
+         "horizontal_flip": true,
+         "vertical_flip": true,
+         "annotation": "resources/examples/predefined_background/SVIA/S_0068_0016.png",
+         "spermatozoon_head_color": "rgba(35, 42, 26, 1)",
+         "spermatozoon_head_highlight_color": "rgba(128, 131, 123, 1)",
+         "spermatozoon_neck_color": "rgba(126, 126, 123, 1)",
+         "spermatozoon_tail_color": "rgba(139, 139, 136, 1)",
+         "spermatozoon_droplet_color": "rgba(86, 88, 82, 1)",
+         "debris_color": "rgba(86, 88, 82, 1)",
+         "shadow_start_color": "rgba(132, 132, 131, 1)",
+         "shadow_end_color": "rgba(200, 200, 194, 1)",
+         "spermatozoon_scale_slider": 4,
+         "shadow_offset_slider": -8,
+         "shadow_scale_slider": 2.1,
+         "n_points_render_slider": 100
+        
+        },
+        {"files": "resources/examples/predefined_background/BOSS",
+         "filter_images": true,
+         "contrast": 0.1,
+         "brightness": 0.1,
+         "horizontal_flip": true,
+         "vertical_flip": true,
+         "annotation": "resources/examples/predefined_background/BOSS/test-1-19_field_6_0.png",
+         "spermatozoon_head_color": "rgba(228, 228, 228, 1)",
+         "spermatozoon_head_highlight_color": "rgba(212, 212, 212, 1)",
+         "spermatozoon_neck_color": "rgba(150, 150, 150, 1)",
+         "spermatozoon_tail_color": "rgba(95, 95, 95, 1)",
+         "spermatozoon_droplet_color": "rgba(228, 228, 228, 1)",
+         "debris_color": "rgba(228, 228, 228, 1)",
+         "shadow_start_color": "rgba(35, 35, 35, 1)",
+         "shadow_end_color": "rgba(35, 35, 35, 1)",
+         "spermatozoon_scale_slider": 1.4,
+         "shadow_offset_slider": -2,
+         "shadow_scale_slider": 4,
+         "n_points_render_slider": 100
+        }
+    ],
+    "parameter_selection": [
+        {
+            "species": "human_new",
+            "n_spermatozoa": [5, 15],
+            "debris_rendering": true,
+            "n_debris": [0, 25],
+            "same_probabilities": false
+        },
+        {
+            "species": "human",
+            "n_spermatozoa": [10, 20],
+            "debris_rendering": true,
+            "n_debris": [0, 25],
+            "same_probabilities": false
+        },
+        {
+            "species": "boar",
+            "n_spermatozoa": [120, 220],
+            "debris_rendering": true,
+            "n_debris": [0, 100],
+            "same_probabilities": false
+        }
+    ],
+    "data_generation": [
+       {}, {}, {}
+    ],
+    "names": ["VISEM", "SVIA", "BOSS"]
+}
