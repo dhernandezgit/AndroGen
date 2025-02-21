@@ -1,6 +1,6 @@
 import os
 import gradio as gr
-from gradio_imageslider import ImageSlider
+#from gradio_imageslider import ImageSlider
 
 class DataGeneration:
     def __init__(self, examples_data):

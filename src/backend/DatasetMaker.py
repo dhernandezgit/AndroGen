@@ -64,15 +64,15 @@ class DatasetMaker:
         """
         progress = tqdm.tqdm(total=self.num_sequences, desc="Generating dataset", leave=False, ascii="▱▰", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         for n in range(self.num_sequences):
-            self.generate_sequence(n)
+            self.generate_sequence(n, remove_old=False)
             progress.update(1)
-            yield [os.path.join(self.output_dir, "gifs", f"{n:06d}.gif") for p in os.listdir(os.path.join(self.output_dir, "gifs"))], ">" + progress.desc + " " + progress.format_meter(
-                                                            n=n+1,
-                                                            total=self.num_sequences,
-                                                            elapsed=progress.format_dict['elapsed'],
-                                                            ascii="▱▰",
-                                                            bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
-                                                        ) + "<br/><br/>"
+            yield [os.path.join(self.output_dir, "gifs", f"{n:06d}.gif") for p in os.listdir(os.path.join(self.output_dir, "gifs"))]#, ">" + progress.desc + " " + progress.format_meter(
+                                                            #n=n+1,
+                                                            #total=self.num_sequences,
+                                                            #elapsed=progress.format_dict['elapsed'],
+                                                            #ascii="▱▰",
+                                                            #bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}'
+                                                        #) + "<br/><br/>"
         progress.close()
         
 

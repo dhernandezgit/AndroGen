@@ -3,7 +3,6 @@ import sys
 sys.path.append(os.path.abspath('.'))
 
 import gradio as gr
-from gradio_image_annotation import image_annotator
 
 from src.backend.utils import read_json, get_color
 

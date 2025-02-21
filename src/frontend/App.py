@@ -200,6 +200,14 @@ class App:
             return [self.test_gif_path] + [os.path.join(self.test_sequence_path, p) for p in np.random.choice(os.listdir(self.test_sequence_path), extra_images)]
         else:
             return [os.path.join(self.test_sequence_path, p) for p in os.listdir(self.test_sequence_path)]
+        
+    def _generate_dataset(self, dataset_name, save_folder, n_sequences, n_frames_sequence, seed):
+        #np.random.seed(int(seed))
+        #random.seed(int(seed))
+        params = self.sequence_config.getParameters()['Sequence.augmentation']
+        ia = ImageAugmentor(contrast=params['contrast'], brightness=params['brightness'], horizontal_flip=params['horizontal_flip'], vertical_flip=params['vertical_flip'])
+        dm = DatasetMaker(num_sequences=int(n_sequences), num_frames=int(n_frames_sequence), sequence_config=self.sequence_config, sf=self.sf, df=self.df, bgg=self.bgg, output_dir=os.path.join(save_folder, dataset_name), image_augmentor=ia)
+        yield from dm.generate_dataset()
     
     def init_components(self):
         custom_css = """
@@ -287,9 +295,10 @@ class App:
             self.parameter_selection.same_probabilities_checkbox.change(self._update_config, [gr.State("use_same_probabilities"), self.parameter_selection.same_probabilities_checkbox], None)
     
             self.data_generation.generate_button.click(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
+            self.data_generation.create_dataset_button.click(self._generate_dataset, [self.data_generation.dataset_name, self.data_generation.save_folder, self.data_generation.text_n_sequences, self.data_generation.text_n_frames_sequence, self.data_generation.text_seed], [self.data_generation.output])
     
     def launch(self):
-        self.app.launch(share=False)
+        self.app.launch(allowed_paths=["/media/daniel/TOSHIBA_EXT"], share=False, debug=True)
         # Load example 0
         
 
