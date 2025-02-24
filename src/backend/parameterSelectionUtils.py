@@ -56,7 +56,7 @@ def save_custom_json(json_text, name):
     return gr.update(choices=species_update_list())
 
 def species_update_list():
-    return [s[:-5] for s in os.listdir(get_species_path())] + ["Custom"]
+    return [s[:-5] for s in os.listdir(get_species_path())]# + ["Custom"]
 
 def toggle_components(selection, custom_json):
     if selection == "Custom":
