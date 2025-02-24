@@ -11,6 +11,7 @@ from src.backend.common.Color import Color
 from src.backend.common.Distributions import NormalDistribution, UniformDistribution
 from src.backend.Motion import *
 from src.backend.Spermatozoon import *
+from src.backend.utils import read_json
 
 
 # Debris
@@ -26,9 +27,7 @@ class DebrisFactory:
         :param path: Path to the file containing the debris data
         """
         # Load JSON file into dictionary
-        with open(path, "r") as f:
-            debris_dict = json.load(f)
-        return debris_dict
+        return read_json(path)
     
     
     def loadStyle(self, path: str):
@@ -37,9 +36,7 @@ class DebrisFactory:
         :param path: Path to the file containing the morphologies
         """
         # Load JSON file into dictionary
-        with open(path, "r") as f:
-            style_dict = json.load(f)
-        return style_dict
+        return read_json(path)
     
     
     def um2pix(self, species_dict, scale = 2.35):
@@ -63,6 +60,7 @@ class DebrisFactory:
         size_probs = [self.debris_dict[size]["probability"] for size in self.debris_dict.keys()]
         size = np.random.choice(list(self.debris_dict.keys()), 1, p=size_probs)[0]
 
+        scale = self.style_dict["debris_scale"]
         pose = Pose(
             x=UniformDistribution(0, resolution[0]-1).random_samples(),
             y=UniformDistribution(0, resolution[1]-1).random_samples(),
@@ -72,8 +70,8 @@ class DebrisFactory:
         motion = Motion([globals()[item]() for item in motion_list], duration=total_frames)
         # Create Components
         debris = Head(
-            width=NormalDistribution(mean=self.debris_dict[size]["measurements"]["mean"], std=self.debris_dict[size]["measurements"]["std"]).random_samples(),
-            height=NormalDistribution(mean=self.debris_dict[size]["measurements"]["mean"], std=self.debris_dict[size]["measurements"]["std"]).random_samples(),
+            width=scale*NormalDistribution(mean=self.debris_dict[size]["measurements"]["mean"], std=self.debris_dict[size]["measurements"]["std"]).random_samples(),
+            height=scale*NormalDistribution(mean=self.debris_dict[size]["measurements"]["mean"], std=self.debris_dict[size]["measurements"]["std"]).random_samples(),
             scale_highlight=1,
             offset_highlight=0,
             color=Color(r=self.style_dict["color"]["debris"]["r"], g=self.style_dict["color"]["debris"]["g"], b=self.style_dict["color"]["debris"]["b"]),
@@ -84,9 +82,9 @@ class DebrisFactory:
             starting_color=Color(r=self.style_dict["color"]["debris_shadow_start"]["r"], g=self.style_dict["color"]["debris_shadow_start"]["g"], b=self.style_dict["color"]["debris_shadow_start"]["b"]),
             ending_color=Color(r=self.style_dict["color"]["debris_shadow_end"]["r"], g=self.style_dict["color"]["debris_shadow_end"]["g"], b=self.style_dict["color"]["debris_shadow_end"]["b"]),
             n_iterations=self.style_dict["debris_shadow_n"],
-            offset=self.style_dict["debris_shadow_offset"],
-            starting_scale=self.style_dict["debris_shadow_starting_scale"],
-            ending_scale=self.style_dict["debris_shadow_ending_scale"]
+            offset=self.style_dict["debris_shadow_offset"] if size == "Large" else self.style_dict["debris_shadow_offset"]*2,
+            starting_scale=self.style_dict["debris_shadow_starting_scale"] if size == "Large" else self.style_dict["debris_shadow_starting_scale"],
+            ending_scale=self.style_dict["debris_shadow_ending_scale"] if size == "Large" else self.style_dict["debris_shadow_ending_scale"]
         )
         
         debris = Spermatozoon(

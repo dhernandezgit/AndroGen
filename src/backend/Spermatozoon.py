@@ -106,7 +106,7 @@ class Droplet(SpermatozoonComponent):
     
     
 class Shadow():
-    def __init__(self, starting_color: Color, ending_color: Color, starting_alpha=1.0, ending_alpha=0.5, offset=0, starting_scale=2, ending_scale=4, n_iterations = 2):
+    def __init__(self, starting_color: Color, ending_color: Color, starting_alpha=1.0, ending_alpha=0.5, offset=0, starting_scale=2, ending_scale=4, n_iterations = 4):
         self.starting_color = np.array(starting_color.get())
         self.ending_color = np.array(ending_color.get())
         self.starting_alpha = starting_alpha
@@ -119,7 +119,7 @@ class Shadow():
 
         # Interpolate colors and alphas
         colors = np.linspace(self.starting_color, self.ending_color, self.n_iterations)
-        alphas = np.linspace(self.starting_alpha, self.ending_alpha, self.n_iterations)
+        alphas = np.power(np.linspace(self.starting_alpha, self.ending_alpha, self.n_iterations), 2)
         self.rgba_colors = np.concatenate((colors, alphas[:, None]), axis=1)
 
     def calculate(self, sizes):

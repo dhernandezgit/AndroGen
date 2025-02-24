@@ -30,6 +30,7 @@ class StyleAdjustment:
             example["shadow_start_color"],
             example["shadow_end_color"],
             int(example["spermatozoon_scale_slider"]),
+            int(example["debris_scale_slider"]),
             int(example["shadow_offset_slider"]),
             int(example["shadow_scale_slider"]),
             int(example["n_points_render_slider"])
@@ -59,6 +60,7 @@ class StyleAdjustment:
         self.shadow_start_color = gr.ColorPicker(label="Shadow start", render=False, interactive=True)
         self.shadow_end_color = gr.ColorPicker(label="Shadow end", render=False, interactive=True)
         self.spermatozoon_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
+        self.debris_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
         self.shadow_offset_slider = gr.Slider(label="Shadow offset", minimum=-10, maximum=10, render=False, interactive=True)
         self.shadow_scale_slider = gr.Slider(label="Shadow scale", minimum=0, maximum=10, render=False, interactive=True)
         self.n_points_render_slider = gr.Slider(label="N points to render", minimum=10, maximum=1000, render=False, interactive=True)
@@ -99,6 +101,7 @@ class StyleAdjustment:
                 gr.Markdown(" ### Scales and other parameters")
                 with gr.Row():
                     self.spermatozoon_scale_slider.render()
+                    self.debris_scale_slider.render()
                     self.shadow_offset_slider.render()
                     self.shadow_scale_slider.render()
                     self.n_points_render_slider.render()

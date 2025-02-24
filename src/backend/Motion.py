@@ -27,7 +27,7 @@ class Movement:
 # Updated subclass names with meaningful names
 class Stationary(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(0.0, 0.0), UniformDistribution(0, 0), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(0.0, 0.0), UniformDistribution(0, 0), UniformDistribution(9999.0, 9999.0))
 
 
 class RotatingStationary(Movement):

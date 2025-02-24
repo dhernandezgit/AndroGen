@@ -1,19 +1,19 @@
 {
     "Small": {
-        "probability": 0.9,
+        "probability": 0.8,
         "motions": {
-            "list": ["SlowDrift"],
+            "list": ["Stationary"],
             "probabilities": [1.0]
           },
         "measurements": {
-            "mean": 1.0,
-            "std": 0.2
+            "mean": 1.5,
+            "std": 0.4
         }
     },
     "Medium": {
-        "probability": 0.08,
+        "probability": 0.19,
         "motions": {
-            "list": ["SlowDrift"],
+            "list": ["Stationary"],
             "probabilities": [1.0]
           },
         "measurements": {
@@ -22,14 +22,14 @@
         }
     },
     "Large": {
-        "probability": 0.02,
+        "probability": 0.01,
         "motions": {
             "list": ["Stationary"],
             "probabilities": [1.0]
           },
         "measurements": {
-            "mean": 16.0,
-            "std": 2.0
+            "mean": 6.0,
+            "std": 1.0
         }
     }
 }

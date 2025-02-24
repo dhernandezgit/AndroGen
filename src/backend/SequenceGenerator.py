@@ -138,13 +138,13 @@ class SequenceGenerator:
             
         for d in debrises:
             # Generate and render the spermatozoon
-            xs, ys, sizes, rgba_colors = s.calculate_movement(t=t)
+            xs, ys, sizes, rgba_colors = d.calculate_movement(t=t)
             element_xs = np.concatenate((element_xs, xs))
             element_ys = np.concatenate((element_ys, ys))
             element_sizes = np.concatenate((element_sizes, sizes))
             element_rgba_colors = np.concatenate((element_rgba_colors, rgba_colors))
             
-            xs, ys, sizes, rgba_colors = s.add_shadows(xs, ys, sizes, rgba_colors)
+            xs, ys, sizes, rgba_colors = d.add_shadows(xs, ys, sizes, rgba_colors)
             shadow_xs = np.concatenate((shadow_xs, xs))
             shadow_ys = np.concatenate((shadow_ys, ys))
             shadow_sizes = np.concatenate((shadow_sizes, sizes))

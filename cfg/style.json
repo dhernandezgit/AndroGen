@@ -58,7 +58,8 @@
     "debris_shadow_offset": -2,
     "debris_shadow_starting_scale": 2,
     "debris_shadow_ending_scale": 4,
-    "debris_shadow_n": 2,
+    "debris_shadow_n": 4,
     "n_points": 100,
-    "scale": 1
+    "scale": 1,
+    "debris_scale": 1
 }
