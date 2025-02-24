@@ -4,7 +4,10 @@ import cv2
 import gradio as gr
 import numpy as np
 from PIL import Image
+import threading
 
+# Create a semaphore for controlling access to JSON file operations.
+json_semaphore = threading.Semaphore()
 
 def save_gif(input_folder, n_seq:int,save_path="resources/temp.gif", duration=100, loop=0):
     image_list = [file for file in os.listdir(input_folder) if file.startswith(f"{n_seq:06d}")]
@@ -24,9 +27,10 @@ def save_gif(input_folder, n_seq:int,save_path="resources/temp.gif", duration=10
     
 
 def read_json(path):
-    with open(path, "r") as f:
-        data = json.load(f)
-    return data
+    with json_semaphore:
+        with open(path, "r") as f:
+            data = json.load(f)
+        return data
 
 def update_json(path, updates):
     """
@@ -35,20 +39,21 @@ def update_json(path, updates):
     :param file_path: Path to the JSON file.
     :param updates: Dictionary containing the updated values.
     """
-    # Read the existing JSON data from the file
-    with open(path, 'r') as file:
-        data = json.load(file)
+    with json_semaphore:
+        # Read the existing JSON data from the file
+        with open(path, 'r') as file:
+            data = json.load(file)
 
-    # Update the JSON data with the values in the updates dictionary
-    for key, value in updates.items():
-        if key in data:
-            data[key] = value
-        else:
-            print(f"Key '{key}' not found in JSON file. Skipping update for this key.")
+        # Update the JSON data with the values in the updates dictionary
+        for key, value in updates.items():
+            if key in data:
+                data[key] = value
+            else:
+                print(f"Key '{key}' not found in JSON file. Skipping update for this key.")
 
-    # Write the updated JSON data back to the file
-    with open(path, 'w') as file:
-        json.dump(data, file, indent=4)
+        # Write the updated JSON data back to the file
+        with open(path, 'w') as file:
+            json.dump(data, file, indent=4)
 
 
 # Function to extract the color of a bounding box
