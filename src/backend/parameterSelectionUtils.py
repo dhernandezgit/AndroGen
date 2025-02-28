@@ -10,6 +10,7 @@ from src.backend.utils import read_json
 # Global variable
 species_path = ""
 species_dict = {}
+species_selection_path = ""
 
 # Get method
 def get_species_path():
@@ -28,6 +29,24 @@ def set_species_path(path):
     """
     global species_path
     species_path = path
+    
+def get_species_selection_path():
+    """
+    Returns the value of the global variable species_path.
+    """
+    global species_selection_path
+    return species_selection_path
+
+# Set method
+def set_species_selection_path(species):
+    """
+    Sets the value of the global variable species_path.
+    Parameters:
+        path (str): The new path to set for species_path.
+    """
+    global species_selection_path
+    global species_path
+    species_selection_path = os.path.join(species_path, f"{species}.json")
     
 # Get method
 def get_species_dict():
@@ -56,7 +75,7 @@ def save_custom_json(json_text, name):
     return gr.update(choices=species_update_list())
 
 def species_update_list():
-    return [s[:-5] for s in os.listdir(get_species_path())]# + ["Custom"]
+    return [f"{s[:-5]}" for s in os.listdir(get_species_path())]# + ["Custom"]
 
 def toggle_components(selection, custom_json):
     if selection == "Custom":

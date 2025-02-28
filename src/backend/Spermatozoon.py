@@ -17,7 +17,7 @@ class SpermatozoonComponent:
     """
     Base class for spermatozoon components.
     """
-    def __init__(self, width: int, height: int, color: Color, n_points=100):
+    def __init__(self, width: int, height: int, color: Color, morphology: str, n_points=100):
         self.width = width
         self.height = height
         self.color = color
@@ -41,7 +41,7 @@ class Head(SpermatozoonComponent):
         alphas = np.linspace(alpha, alpha, num=self.n_points)
         
         half_n_points = int(self.n_points / 2)
-        first_circle = self.width * NormalDistribution(0.8, 0.1).random_samples()
+        first_circle = self.width * NormalDistribution(0.6, 0.1).random_samples()
         medium_circle = self.width
         last_circle = self.width - first_circle/2
         circle_sizes = [first_circle, medium_circle, last_circle]
@@ -126,19 +126,22 @@ class Shadow():
         new_sizes = []
         new_colors = []
         for scale in self.scales:
-            new_sizes += list(np.clip(np.array(sizes) * scale + self.offset, 0, None))
+            new_sizes += list(np.clip(np.array(sizes) + self.offset, 0, None) * scale)
         for rgba_color in self.rgba_colors:
             new_colors += list(np.repeat(rgba_color.reshape(1,-1), len(sizes), axis=0))
         return np.array(new_sizes), np.array(new_colors)
     
 # Spermatozoon and its Morphology
 class Spermatozoon:
-    def __init__(self, sperm_id: int, pose: Pose, motion: Motion, components: List[SpermatozoonComponent], shadow: Shadow, n_points=100, dt=0.1):
+    def __init__(self, sperm_id: int, pose: Pose, z: int, motion: Motion, morphology: str, components: List[SpermatozoonComponent], shadow: Shadow, blur: int, n_points=100, dt=0.2):
         self.id = sperm_id
         self.x0, self.y0, self.theta0 = pose.get()
+        self.z = z
+        self.blur = blur
         self.theta0 = np.deg2rad(self.theta0 + 180)
         self.v, self.omega = motion.generate_trajectory()
         self.components = components
+        self.morphology = morphology
         self.head = [c for c in self.components if isinstance(c, Head)][0]
         self.neck = [c for c in self.components if isinstance(c, Neck)]
         self.tail = [c for c in self.components if isinstance(c, Tail)]
@@ -150,17 +153,17 @@ class Spermatozoon:
         self.xt, self.yt, self.thetat = self._compute_trajectory()
     
     def _calculate_component_points(self, n_points):
-        head_length = self.head.height
-        neck_lengths = [neck.height for neck in self.neck]
-        tail_lengths = [tail.height for tail in self.tail]
+        head_length = self.head.height * self.z
+        neck_lengths = [neck.height * self.z for neck in self.neck]
+        tail_lengths = [tail.height * self.z for tail in self.tail]
         neck_max_length = max(neck_lengths) if len(neck_lengths) > 0 else 0
         tail_max_length = max(tail_lengths) if len(tail_lengths) > 0 else 0
-        length = head_length + neck_max_length + tail_max_length
+        self.length = head_length + neck_max_length + tail_max_length
         neck_points = 0
         
-        self.head.n_points = round(head_length/length*n_points)
+        self.head.n_points = round(head_length/self.length*n_points)
         for i, n in enumerate(self.neck):
-            self.neck[i].n_points = round(n.height/length*n_points)
+            self.neck[i].n_points = round(n.height/self.length*n_points)
             neck_points = self.neck[i].n_points
         for i, t in enumerate(self.tail):
             self.tail[i].n_points = n_points - self.head.n_points - neck_points
@@ -171,11 +174,13 @@ class Spermatozoon:
         """
         Precomputes the trajectory and returns functions to get positions.
         """
+        if self.morphology == "Bent middle piece":
+            self.v = -self.v
         # Precompute cumulative headings
-        thetat = self.theta0 + np.cumsum(self.omega * self.dt)
+        thetat = self.theta0 + np.cumsum(self.omega)
         # Precompute displacements
-        dx = - self.v * np.cos(thetat) * self.dt
-        dy = - self.v * np.sin(thetat) * self.dt
+        dx = - self.v * np.cos(thetat)
+        dy = - self.v * np.sin(thetat)
         dx[0] = 0
         dy[0] = 0
         
@@ -203,16 +208,25 @@ class Spermatozoon:
 
         total_angle = self.tail[0].total_angle if self.tail else 0
         angle_phase = self.tail[0].angle_phase if self.tail else 0
-        v_scale = 2*self.v[t]/50 if self.v[t]>0 else 2*UniformDistribution(50,60).random_samples()/50
-        omega_scale = -0.2*self.omega[t]
+        v_scale = 0.8*self.v[t]/50 if self.v[t]>0 else 2*UniformDistribution(50,60).random_samples()/50
+        omega_scale = -2*self.omega[t]
         
+        x_total = v_scale*3000
+        x = np.linspace(0, x_total/self.length, self.n_points+2)
+        y = np.sin(x-cycle_speed*v_scale*t*self.dt + angle_phase) * np.linspace(0, v_scale * cycle_amplitude, self.n_points+2) * np.power(np.linspace(0.5, 1, self.n_points+2), 2)
+        dx = np.diff(x)
+        dy = np.diff(y)
+        angles = np.diff(np.arctan2(dy, dx))
+
         # Head calculations
         lengths_head, sizes_head, colors_head, alphas_head = self.head._calculate_segment()
+        sizes_head = sizes_head * self.z
         head_indices = np.arange(component_points_cum[0], component_points_cum[1])
         head_t = t*self.dt+self.head.n_points/self.n_points * self.dt
         
-        angles_head = (np.linspace(+0.0*cycle_amplitude, +1.0*cycle_amplitude, num=self.head.n_points) *
-                       np.sin(cycle_speed * np.linspace(t, head_t, num=self.head.n_points) + angle_phase)).ravel()
+        #angles_head = (np.linspace(+0.5*cycle_amplitude, +1.0*cycle_amplitude, num=self.head.n_points) *
+        #               np.sin(cycle_speed * np.linspace(t, head_t, num=self.head.n_points) + angle_phase)).ravel()
+        angles_head = angles[head_indices]
         theta_head = self.thetat[t] + np.cumsum(angles_head)
         xs[head_indices] = self.xt[t] + np.cumsum(lengths_head * np.cos(theta_head)) + sizes_head[0]/2 * np.cos(theta_head[0])
         ys[head_indices] = self.yt[t] + np.cumsum(lengths_head * np.sin(theta_head)) + sizes_head[0]/2 * np.sin(theta_head[0])
@@ -223,12 +237,14 @@ class Spermatozoon:
         # Neck calculations
         if self.neck:
             lengths_neck, sizes_neck, colors_neck, alphas_neck = self.neck[0]._calculate_segment()
+            sizes_neck = sizes_neck * self.z
             neck_indices = np.arange(component_points_cum[1], component_points_cum[2])
             neck_t = head_t+self.neck[0].n_points/self.n_points * self.dt
-            angles_neck = (np.linspace(+1.0*cycle_amplitude, +1.0*cycle_amplitude, num=self.neck[0].n_points) *
-                           np.sin(cycle_speed * np.linspace(head_t, neck_t, num=self.neck[0].n_points) + angle_phase) *
-                           np.linspace(1*v_scale, 0.33*v_scale, num=self.neck[0].n_points)
-                           ).ravel()
+            #angles_neck = (np.linspace(+1.0*cycle_amplitude, +1.0*cycle_amplitude, num=self.neck[0].n_points) *
+            #               np.sin(cycle_speed * np.linspace(head_t, neck_t, num=self.neck[0].n_points) + angle_phase) *
+            #               np.linspace(1*v_scale, 0.33*v_scale, num=self.neck[0].n_points)
+            #               ).ravel()
+            angles_neck = angles[neck_indices]
             theta_neck = theta_head[-1] + np.cumsum(angles_neck) + omega_scale
             xs[neck_indices] = xs[head_indices[-1]] + np.cumsum(lengths_neck * np.cos(theta_neck))
             ys[neck_indices] = ys[head_indices[-1]] + np.cumsum(lengths_neck * np.sin(theta_neck))
@@ -239,12 +255,16 @@ class Spermatozoon:
         # Tail calculations
         if self.tail:
             lengths_tail, sizes_tail, colors_tail, alphas_tail = self.tail[0]._calculate_segment()
+            sizes_tail = sizes_tail * self.z
             tail_indices = np.arange(component_points_cum[2], component_points_cum[3])
             tail_t = neck_t+self.tail[0].n_points/self.n_points * self.dt
-            angles_tail = (np.linspace(+1.0*cycle_amplitude, +1.0*cycle_amplitude, num=self.tail[0].n_points) *
-                           np.sin(cycle_speed * np.linspace(neck_t, tail_t, num=self.tail[0].n_points) + angle_phase) *
-                           np.linspace(1.0*v_scale, 0.33*v_scale, num=self.tail[0].n_points)
-                           ).ravel()
+            #angles_tail = (np.linspace(+1.0*cycle_amplitude, +1.0*cycle_amplitude, num=self.tail[0].n_points) *
+            #               np.sin(cycle_speed * np.linspace(neck_t, tail_t, num=self.tail[0].n_points) + angle_phase) *
+            #               np.linspace(1.0*v_scale, 0.33*v_scale, num=self.tail[0].n_points)
+            #               ).ravel()
+            angles_tail = angles[tail_indices]
+            if self.morphology == "Bent middle piece":
+                angles_tail[0] += np.pi
             theta_tail = theta_neck[-1] + np.cumsum(angles_tail)
             xs[tail_indices] = xs[neck_indices[-1]] + np.cumsum(lengths_tail * np.cos(theta_tail))
             ys[tail_indices] = ys[neck_indices[-1]] + np.cumsum(lengths_tail * np.sin(theta_tail))
@@ -255,6 +275,7 @@ class Spermatozoon:
         if self.droplet:
             index = self.droplet[0]._calculate_position(self.head, self.neck[0])
             lengths_droplet, sizes_droplet, colors_droplet, alphas_droplet = self.droplet[0]._calculate_segment()
+            sizes_droplet = sizes_droplet * self.z
             sizes[index] = sizes_droplet
             colors[index] = colors_droplet
             alphas[index] = alphas_droplet
@@ -270,8 +291,9 @@ class Spermatozoon:
         new_ys = list(ys) * (self.shadow.n_iterations + 1)
         new_sizes = np.concatenate((sizes, sizes_shadow), axis=0)
         new_rgba_colors = np.concatenate((rgba_colors, rgba_colors_shadow), axis=0)
+        new_blur = np.ones_like(np.array(new_xs)) * self.blur
         
-        return np.array(new_xs[::-1]), np.array(new_ys[::-1]), np.array(new_sizes[::-1]), np.array(new_rgba_colors[::-1])
+        return np.array(new_xs[::-1]), np.array(new_ys[::-1]), np.array(new_sizes[::-1]), np.array(new_rgba_colors[::-1]), new_blur
     
     def add_highlight(self, xs, ys, sizes, rgba_colors):
         highlight_n_points = int(self.head.scale_highlight * self.head.n_points)

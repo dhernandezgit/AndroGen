@@ -41,7 +41,7 @@ class ImageAugmentor:
         if self.vertical_flip:
             augmenters.append(A.VerticalFlip(p=0.5))  # Vertical flip with 50% probability
 
-        return A.Compose(augmenters)
+        return A.ReplayCompose(augmenters)
 
     def augment(self, image, num_images=1):
         """
@@ -51,5 +51,15 @@ class ImageAugmentor:
         :param num_images: Number of augmented images to generate.
         :return: List of augmented images.
         """
-        augmented_images = [self.augmenter(image=image)['image'] for _ in range(num_images)]
-        return augmented_images
+        augmented_images = [self.augmenter(image=image) for _ in range(num_images)]
+        images = []
+        horizontal_flips = []
+        vertical_flips = []
+        for augmented_image in augmented_images:
+            transform_names = [aug["__class_fullname__"] for aug in augmented_image["replay"]["transforms"]]
+            horizontal_flip_index = transform_names.index("HorizontalFlip")
+            vertical_flip_index = transform_names.index("VerticalFlip")
+            images.append(augmented_image["image"])
+            horizontal_flips.append(augmented_image["replay"]["transforms"][0]["applied"])
+            vertical_flips.append(augmented_image["replay"]["transforms"][1]["applied"])
+        return images, horizontal_flips, vertical_flips

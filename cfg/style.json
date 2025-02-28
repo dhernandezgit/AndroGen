@@ -52,14 +52,24 @@
         }
     },
     "shadow_n": 4,
-    "shadow_offset": -2,
+    "shadow_offset": -1,
     "shadow_starting_scale": 1,
     "shadow_ending_scale": 4,
-    "debris_shadow_offset": -2,
+    "debris_shadow_offset": -1,
     "debris_shadow_starting_scale": 2,
     "debris_shadow_ending_scale": 4,
     "debris_shadow_n": 4,
     "n_points": 100,
     "scale": 1,
-    "debris_scale": 1
+    "debris_scale": 1,
+    "z_start": 0.95,
+    "z_end": 1.05,
+    "blur_start": 0.0,
+    "blur_end": 3.0,
+    "active_classes": [
+        "Normal",
+        "Proximal cytoplastmic droplet",
+        "Distal cytoplastmic droplet",
+        "Coiled tail"
+    ]
 }

@@ -1,6 +1,6 @@
 {
   "Normal": {
-    "probability": 1.0,
+    "probability": 0.5,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
@@ -27,14 +27,14 @@
     }
   },
   "Distal": {
-    "probability": 0.0,
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
@@ -52,20 +52,20 @@
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 1.2, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }
   },
   "Proximal cytoplastmic droplet": {
-    "probability": 0.0,
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
@@ -83,20 +83,20 @@
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 1.2, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }
   },
   "Distal cytoplastmic droplet": {
-    "probability": 0.0,
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
@@ -114,20 +114,20 @@
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 1.2, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }
   },
   "Bent middle piece": {
-    "probability": 0.0,
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
@@ -145,20 +145,20 @@
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 1.2, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }
   },
   "Coiled tail": {
-    "probability": 0.0,
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
@@ -176,7 +176,7 @@
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 2.8, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }

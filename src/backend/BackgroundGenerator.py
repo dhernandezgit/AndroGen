@@ -9,7 +9,7 @@ class BackgroundGenerator:
         self.image_paths = None
         self.single_image_path = None
     
-    def setGenerationMethod(self, method, paths=None, single_image_path=None):
+    def setGenerationMethod(self, method, paths=None):
         """
         Set the generation method: 'list' or 'single image'.
         For 'list', provide a list of image paths.
@@ -20,7 +20,6 @@ class BackgroundGenerator:
         
         self.generation_method = method
         self.image_paths = paths
-        self.single_image_path = single_image_path
 
     def _generateFromList(self, n_images=10):
         """
@@ -58,10 +57,10 @@ class BackgroundGenerator:
         """
         Return the image given the image path.
         """
-        if not self.single_image_path:
-            raise ValueError("Single image path is not provided.")
-        
-        img = cv2.imread(self.single_image_path)
+        if not self.image_paths:
+            img = np.zeros((1280,1024,3), dtype=np.uint8)
+        else:
+            img = cv2.imread(self.image_paths)
         if img is None:
             raise ValueError("Image could not be read. Check the path.")
         

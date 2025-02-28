@@ -66,6 +66,9 @@ class DebrisFactory:
             y=UniformDistribution(0, resolution[1]-1).random_samples(),
             angle=UniformDistribution(0, 360).random_samples(),
         )
+        z = UniformDistribution(a=self.style_dict["z_start"], b=self.style_dict["z_end"]).random_samples()
+        max_z = max(self.style_dict["z_end"] - 1, 1 - self.style_dict["z_start"])
+        blur = self.style_dict["blur_start"] + int((self.style_dict["blur_end"] - self.style_dict["blur_start"])*np.abs(1-z)/max_z)
         motion_list = np.random.choice(self.debris_dict[size]["motions"]["list"], total_frames, p=self.debris_dict[size]["motions"]["probabilities"])
         motion = Motion([globals()[item]() for item in motion_list], duration=total_frames)
         # Create Components
@@ -82,17 +85,20 @@ class DebrisFactory:
             starting_color=Color(r=self.style_dict["color"]["debris_shadow_start"]["r"], g=self.style_dict["color"]["debris_shadow_start"]["g"], b=self.style_dict["color"]["debris_shadow_start"]["b"]),
             ending_color=Color(r=self.style_dict["color"]["debris_shadow_end"]["r"], g=self.style_dict["color"]["debris_shadow_end"]["g"], b=self.style_dict["color"]["debris_shadow_end"]["b"]),
             n_iterations=self.style_dict["debris_shadow_n"],
-            offset=self.style_dict["debris_shadow_offset"] if size == "Large" else self.style_dict["debris_shadow_offset"]*2,
-            starting_scale=self.style_dict["debris_shadow_starting_scale"] if size == "Large" else self.style_dict["debris_shadow_starting_scale"],
-            ending_scale=self.style_dict["debris_shadow_ending_scale"] if size == "Large" else self.style_dict["debris_shadow_ending_scale"]
+            offset=0,
+            starting_scale=self.style_dict["debris_shadow_starting_scale"]/4 if size == "Large" else self.style_dict["debris_shadow_starting_scale"]/1.5,
+            ending_scale=self.style_dict["debris_shadow_ending_scale"]/4 if size == "Large" else self.style_dict["debris_shadow_ending_scale"]/1.5
         )
         
         debris = Spermatozoon(
             sperm_id=self.id_count,
+            morphology="Normal",
             pose=pose,
+            z=z,
             motion=motion,
             components=[debris],
             shadow=shadow,
+            blur=blur,
             n_points=self.style_dict["n_points"]
         )
         self.id_count += 1

@@ -30,7 +30,6 @@ class App:
         
         config = configparser.ConfigParser()
         config.read(self.config_path)
-        self.species_path = config['Paths']['species_path']
         self.test_sequence_path = config['Paths']['test_sequence_path']
         self.test_gif_path = config['Paths']['test_gif_path']
         self.species_dict_path = config['Paths']['species_dict_path']
@@ -39,9 +38,13 @@ class App:
         self.sequence_config = SequenceConfig(config_path)
         self.dataset_config = DatasetConfig(config_path)
         set_species_path("/".join(self.species_dict_path.split("/")[:-1]))
+        set_species_selection_path(self.species_dict_path.split("/")[-1].split(".")[0])
+        self.species_selection_dict_path = get_species_selection_path()
+        os.makedirs(os.path.join(self.test_sequence_path, "frames"), exist_ok=True)
+        os.makedirs(os.path.join(self.test_sequence_path, "labels"), exist_ok=True)
         
         self.bgg = BackgroundGenerator()
-        self.sf = SpermatozoonFactory(self.species_dict_path, self.style_config_path)
+        self.sf = SpermatozoonFactory(self.species_selection_dict_path, self.style_config_path)
         self.df = DebrisFactory(self.debris_dict_path, self.style_config_path)
         
         self.examples_data = read_json(os.path.join('cfg', 'examples.json'))
@@ -49,21 +52,25 @@ class App:
         self.data_generation = DataGeneration(self.examples_data)
         self.style_adjustment = StyleAdjustment(self.data_generation.output, self.examples_data)
         self.parameter_selection = ParameterSelection(self.data_generation.output, self.examples_data)
-
         self.examples_processed = [self.style_adjustment.read_examples(self.examples_data, i)+
                                    self.parameter_selection.read_examples(self.examples_data, i)+
                                    self.data_generation.read_examples(self.examples_data, i) for i, name in enumerate(self.examples_data["names"])]
-        self.example_text = gr.Textbox(placeholder="Example name", label="Example name", interactive=True, render=False)
-        self.examples_save_button = gr.Button("Save new example", render=False, interactive=True)
-        
-
+        self.example_text = gr.Textbox(placeholder="Example name", label="Example name", interactive=True, render=False, visible=False)
+        self.examples_save_button = gr.Button("Save new example", render=False, interactive=True, visible=False)
+        self.examples_markdown = gr.Textbox(label="", value="Click on an example to start", render=False, visible=True, interactive=False)
+        self.timer = gr.Timer(active=False, value=1, render=False)
+        self.tick_state = gr.State(value=False, render=False)
         self.init_components()
-
+        
+    def _set_values(self, i=0):
+        return self.style_adjustment.set_values(self.examples_data, i) + self.parameter_selection.set_values(self.examples_data, i) + self.data_generation.set_values(self.examples_data, i)
+            
     def _init_inputs(self, index=0):
         self.input_list = [self.style_adjustment.input_images,
                         self.style_adjustment.filter_images,
                         self.style_adjustment.contrast_variation,
                         self.style_adjustment.brightness_variation,
+                        self.style_adjustment.blur_variation,
                         self.style_adjustment.horizontal_flip_checkbox,
                         self.style_adjustment.vertical_flip_checkbox,
                         self.style_adjustment.color_image_input,
@@ -80,20 +87,27 @@ class App:
                         self.style_adjustment.shadow_offset_slider,
                         self.style_adjustment.shadow_scale_slider,
                         self.style_adjustment.n_points_render_slider,
+                        self.style_adjustment.z_range,
                         self.parameter_selection.species_dropdown,
                         self.parameter_selection.n_spermatozoa,
                         self.parameter_selection.debris_checkbox,
                         self.parameter_selection.n_debris,
-                        self.parameter_selection.same_probabilities_checkbox,
+                        self.data_generation.text_n_frames_sequence,
+                        self.data_generation.text_n_sequences
                         ]
 
         #for input_element, value in zip(self.input_list, self.examples_processed[index]):
         #    input_element.value = value
 
-    def _save_example(self, example_name, example):
+    def _save_example(self, example_name):
         self.examples_data = read_json(os.path.join('cfg', 'examples.json'))
         print(self.examples_data)
         return gr.update(example_labels=self.examples_data["names"])
+    
+    def _example_select(self, evt: gr.SelectData):
+        index = evt.index  # Get index of clicked image
+        values = self._set_values(i=index)
+        return values + [gr.update(open = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
         
     def _update_background_generator(self, images, contrast, brightness, horizontal_flip, vertical_flip, n_images_out=9):
         self.sequence_config.update()
@@ -111,7 +125,7 @@ class App:
                 images_out = []
                 for n in range(n_images_out):
                     bg = self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution'])
-                    images_out.append(ia.augment(bg, num_images=1)[0])
+                    images_out.append(ia.augment(bg, num_images=1)[0][0])
                 return images_out
             else:
                 images_out = []
@@ -119,7 +133,7 @@ class App:
                     image = np.random.choice(images, 1)[0]
                     self.bgg.setGenerationMethod('single', single_image_path=image)
                     ia = ImageAugmentor(contrast=contrast, brightness=brightness, horizontal_flip=horizontal_flip, vertical_flip=vertical_flip)
-                    images_out.append(ia.augment(self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution']), num_images=1)[0])
+                    images_out.append(ia.augment(self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution']), num_images=1)[0][0])
                 return images_out
         
     def _update_config(self, name, value):
@@ -140,7 +154,7 @@ class App:
         params['Sequence.augmentation']['vertical_flip'] = vertical_flip 
         self.sequence_config.writeParameters(params)
                 
-    def _update_colors(self, head_color, head_highlight_color, neck_color, tail_color, droplet_color, debris_color, shadow_start_color, shadow_end_color, scale, debris_scale, shadow_offset, shadow_scale, n_points):
+    def _update_colors(self, head_color, head_highlight_color, neck_color, tail_color, droplet_color, debris_color, shadow_start_color, shadow_end_color, scale, debris_scale, shadow_offset, shadow_scale, n_points, z_range, blur, active_classes):
         params = read_json(self.style_config_path)
         params['color']['head']['r'] = process_color(head_color)[0]
         params['color']['head']['g'] = process_color(head_color)[1]
@@ -181,27 +195,68 @@ class App:
         params['debris_shadow_starting_scale'] = max(int(shadow_scale/2), 1)
         params['debris_shadow_ending_scale'] = shadow_scale
         params['n_points'] = n_points
+        params['z_start'] = z_range[0]
+        params['z_end'] = z_range[1]
+        params['blur_start'] = blur[0]
+        params['blur_end'] = blur[1]
+        params['active_classes'] = active_classes
         update_json(self.style_config_path, params)
-        self.sf = SpermatozoonFactory(self.species_dict_path, self.style_config_path)
+        self.species_selection_dict_path = get_species_selection_path()
+        self.sf = SpermatozoonFactory(self.species_selection_dict_path, self.style_config_path)
         self.df = DebrisFactory(self.debris_dict_path, self.style_config_path)
-                
+           
+    def _species_select(self, selection, custom_json):
+        if selection == "Custom":
+            return [
+        gr.update(choices=species_update_list()),
+        gr.update(choices=list(get_species_dict().keys()), value=list(get_species_dict().keys())[0]),
+        gr.update(visible=True, value=json.dumps(get_species_dict(), indent=4)),
+        gr.update(visible=False),
+        gr.update(visible=True), 
+        gr.update(visible=True)
+        ]
+        else:
+            set_species_selection_path(selection)
+            set_species_dict(read_json(get_species_selection_path()))
+            self.species_selection_dict_path = get_species_selection_path()
+            self.sf = SpermatozoonFactory(self.species_selection_dict_path, self.style_config_path)
+            self.df = DebrisFactory(self.debris_dict_path, self.style_config_path)
+            return [
+        gr.update(choices=species_update_list()),
+        gr.update(choices=list(get_species_dict().keys()), value=list(get_species_dict().keys())[0]),
+        gr.update(visible=False),
+        gr.update(visible=True, value=get_species_dict()),
+        gr.update(visible=False), 
+        gr.update(visible=False)
+        ]
+           
     def _generate_sequence(self, n_frames, extra_images = 9):
         n_frames = int(n_frames)
         remove_old=True
         if remove_old:
-            if os.path.isdir(self.test_sequence_path):
-                shutil.rmtree(self.test_sequence_path)
+            if os.path.isdir(os.path.join(self.test_sequence_path, "frames")):
+                shutil.rmtree(os.path.join(self.test_sequence_path, "frames"))
             if os.path.exists(self.test_gif_path):
                 os.remove(self.test_gif_path)
         params = self.sequence_config.getParameters()['Sequence.augmentation']
         ia = ImageAugmentor(contrast=params['contrast'], brightness=params['brightness'], horizontal_flip=params['horizontal_flip'], vertical_flip=params['vertical_flip'])
         sg = SequenceGenerator(n_frames, self.sequence_config, self.sf, self.df, self.bgg)
-        sg.generate_sequence(output_dir=self.test_sequence_path)
-        save_gif(self.test_sequence_path, 0)
+        progress = gr.Progress(track_tqdm=True)
+        for i in progress.tqdm(sg.generate_sequence(output_dir=self.test_sequence_path, yield_progress=True), total=n_frames, desc="Generating synthetic frames..."):
+            ...
+            
+        save_gif(os.path.join(self.test_sequence_path, "frames"), 0)
         if n_frames > 1:
-            return [self.test_gif_path] + [os.path.join(self.test_sequence_path, p) for p in np.random.choice(os.listdir(self.test_sequence_path), extra_images)]
+            return [self.test_gif_path] + [os.path.join(self.test_sequence_path, "frames", p) for p in np.random.choice(os.listdir(os.path.join(self.test_sequence_path, "frames")), extra_images)]
         else:
-            return [os.path.join(self.test_sequence_path, p) for p in os.listdir(self.test_sequence_path)]
+            return [os.path.join(self.test_sequence_path, "frames", p) for p in os.listdir(os.path.join(self.test_sequence_path, "frames"))]
+        
+        
+    def _tick(self, state):
+        return [not state, gr.update(active = False)]
+    
+    def _generate_sequence_timer(self, n_frames, extra_images = 9):
+        return [self._generate_sequence(n_frames=25, extra_images = 9)]
         
     def _generate_dataset(self, dataset_name, save_folder, n_sequences, n_frames_sequence, seed):
         #np.random.seed(int(seed))
@@ -227,7 +282,7 @@ class App:
         """
         with gr.Blocks(css=custom_css, fill_width=True, fill_height=True, theme=gr.themes.Soft()) as self.app:
             with gr.Row():
-                with gr.Sidebar(width = 640) as col_left:
+                with gr.Sidebar(width="35%", open=False) as self.col_left:
                     with gr.Tabs():
                         with gr.TabItem("Start") as tab_start:
                             self.start.render()
@@ -236,35 +291,40 @@ class App:
                         with gr.TabItem("Cell parameters") as tab_parameter_selection:
                             self.parameter_selection.render()
                     self._init_inputs(index=0)
-                    with gr.Group():
-                        with gr.Row():
-                            with gr.Column(scale=1):
-                                self.examples = gr.Examples(self.examples_processed, elem_id="examples-container", label="Dataset examples", example_labels=self.examples_data["names"],
-                                inputs=self.input_list,
-                                outputs=None,
-                                examples_per_page=15)
-                                processed_example = self.examples._get_processed_example(self.examples_processed[0])
-                                [
-                                    gr.update(self.input_list[i], value=processed_example[i])
-                                    for i in range(len(self.examples.inputs_with_examples))
-                                ]
-                            with gr.Column(scale=1):
-                                self.example_text.render()
-                                self.examples_save_button.render()
-                            #processed_example = self.examples._get_processed_example(self.examples_processed[0])
-                            #[
-                            #    gr.update(self.input_list[i], value=processed_example[i])
-                            #    for i in range(len(self.examples.inputs_with_examples))
-                            #]
-                    
-                with gr.Column() as col_right:
+                    #with gr.Group():
+                    #    with gr.Row():
+                    #        with gr.Column(scale=1):
+                                #self.examples = gr.Examples(self.examples_processed, elem_id="examples-container", label="Dataset examples", example_labels=self.examples_data["names"],
+                                #inputs=self.input_list,
+                                #outputs=None,
+                                #postprocess=True,
+                                #examples_per_page=15)
+                                #self.examples.load_input_event.then(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
+                                #processed_example = self.examples._get_processed_example(self.examples_processed[0])
+                                #print(processed_example)
+                                #self.app.load(lambda: ([gr.update(input_elem, value=example_value) for input_elem, example_value in zip(self.input_list, self.examples_processed[0])]), None, self.input_list)
+                    #        with gr.Column(scale=1):
+                    #            self.example_text.render()
+                    #            self.examples_save_button.render()
+                with gr.Column() as self.col_right:
                     self.data_generation.render()
- 
-            self.examples_save_button.click(self._save_example, self.example_text, None) #self.examples
+                    with gr.Group():
+                        images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
+                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=[3], rows=[1], interactive=True, height="5%", allow_preview=False)
+                        self.examples_markdown.render()
+                        self.timer.render()
+                        self.tick_state.render()
+                        with gr.Column(scale=1):
+                            self.example_text.render()
+                            self.examples_save_button.render()
 
-            tab_start.select(lambda: (gr.update(width="20%")), None, [col_left])
-            tab_style_adjustment.select(lambda: (gr.update(width="50%")), None, [col_left])
-            tab_parameter_selection.select(lambda: (gr.update(width="50%")), None, [col_left])
+            self.examples_gallery.select(self._example_select, None, [*self.input_list, self.col_left, self.data_generation.output, self.data_generation.generate_button, self.data_generation.advanced_settings, self.example_text, self.examples_save_button, self.examples_markdown, self.timer])
+            self.examples_save_button.click(self._save_example, self.example_text, None)
+            self.timer.tick(self._tick, [self.tick_state], [self.tick_state, self.timer])
+            self.tick_state.change(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
+            tab_start.select(lambda: (gr.update(width="20%")), None, [self.col_left])
+            tab_style_adjustment.select(lambda: (gr.update(width="50%")), None, [self.col_left])
+            tab_parameter_selection.select(lambda: (gr.update(width="50%")), None, [self.col_left])
             
             self.style_adjustment.background_button.click(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
             self.style_adjustment.input_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
@@ -275,31 +335,35 @@ class App:
             self.style_adjustment.horizontal_flip_checkbox.change(self._update_augmentation, [self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [])
             self.style_adjustment.vertical_flip_checkbox.change(self._update_augmentation, [self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [])
             
-            self.style_adjustment.spermatozoon_head_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.spermatozoon_head_highlight_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.spermatozoon_neck_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.spermatozoon_tail_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.spermatozoon_droplet_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.debris_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.shadow_start_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.shadow_end_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.spermatozoon_scale_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.shadow_offset_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.shadow_scale_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
-            self.style_adjustment.n_points_render_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider], [])
+            self.style_adjustment.spermatozoon_head_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_head_highlight_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_neck_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_head_highlight_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_neck_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_tail_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_droplet_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.debris_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.shadow_start_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.shadow_end_color.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.spermatozoon_scale_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.shadow_offset_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.shadow_scale_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.n_points_render_slider.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.blur_variation.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
+            self.style_adjustment.z_range.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
             
-            self.parameter_selection.species_dropdown.change(toggle_components, [self.parameter_selection.species_dropdown, self.parameter_selection.species_json_viewer], [self.parameter_selection.species_dropdown, self.parameter_selection.morphologies_checkboxes, self.parameter_selection.species_json_editor, self.parameter_selection.species_json_viewer, self.parameter_selection.species_editor_save_text, self.parameter_selection.species_editor_save_button])
+            self.parameter_selection.species_dropdown.change(self._species_select, [self.parameter_selection.species_dropdown, self.parameter_selection.species_json_viewer], [self.parameter_selection.species_dropdown, self.parameter_selection.morphologies_checkboxes, self.parameter_selection.species_json_editor, self.parameter_selection.species_json_viewer, self.parameter_selection.species_editor_save_text, self.parameter_selection.species_editor_save_button])
             self.parameter_selection.species_editor_save_button.click(save_custom_json, [self.parameter_selection.species_json_editor, self.parameter_selection.species_editor_save_text], [self.parameter_selection.species_dropdown])
     
+            self.parameter_selection.morphologies_checkboxes.change(self._update_colors, [self.style_adjustment.spermatozoon_head_color, self.style_adjustment.spermatozoon_head_highlight_color, self.style_adjustment.spermatozoon_neck_color, self.style_adjustment.spermatozoon_tail_color, self.style_adjustment.spermatozoon_droplet_color, self.style_adjustment.debris_color, self.style_adjustment.shadow_start_color, self.style_adjustment.shadow_end_color, self.style_adjustment.spermatozoon_scale_slider, self.style_adjustment.debris_scale_slider, self.style_adjustment.shadow_offset_slider, self.style_adjustment.shadow_scale_slider, self.style_adjustment.n_points_render_slider, self.style_adjustment.z_range, self.style_adjustment.blur_variation, self.parameter_selection.morphologies_checkboxes], [])
             self.parameter_selection.n_spermatozoa.change(self._update_config, [gr.State("spermatozoon_n"), self.parameter_selection.n_spermatozoa], None)
             self.parameter_selection.debris_checkbox.change(self._update_config, [gr.State("render_debris"), self.parameter_selection.debris_checkbox], None)
             self.parameter_selection.n_debris.change(self._update_config, [gr.State("debris_n"), self.parameter_selection.n_debris], None)
-            self.parameter_selection.same_probabilities_checkbox.change(self._update_config, [gr.State("use_same_probabilities"), self.parameter_selection.same_probabilities_checkbox], None)
-    
+                
             self.data_generation.generate_button.click(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
             self.data_generation.create_dataset_button.click(self._generate_dataset, [self.data_generation.dataset_name, self.data_generation.save_folder, self.data_generation.text_n_sequences, self.data_generation.text_n_frames_sequence, self.data_generation.text_seed], [self.data_generation.output])
     
-    def launch(self):
+    def launch(self):    
         self.app.launch(allowed_paths=["/media/daniel/TOSHIBA_EXT"], share=False, debug=True)
         # Load example 0
         

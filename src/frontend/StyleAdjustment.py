@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.path.abspath('.'))
 
 import gradio as gr
+from gradio_rangeslider import RangeSlider
 
 from src.backend.utils import read_json, get_color
 
@@ -18,6 +19,7 @@ class StyleAdjustment:
             example["filter_images"],
             float(example["contrast"]),
             float(example["brightness"]),
+            [int(element) for element in example["blur"]],
             example["horizontal_flip"],
             example["vertical_flip"],
             example["annotation"],
@@ -32,8 +34,61 @@ class StyleAdjustment:
             int(example["spermatozoon_scale_slider"]),
             int(example["debris_scale_slider"]),
             int(example["shadow_offset_slider"]),
-            int(example["shadow_scale_slider"]),
-            int(example["n_points_render_slider"])
+            example["shadow_scale_slider"],
+            int(example["n_points_render_slider"]),
+            [float(element) for element in example["z_range"]]
+        ]
+        
+    def set_values(self, examples_data, index):
+        examples = self.read_examples(examples_data, index)
+        return [
+            gr.update(value=examples[0], interactive=True),
+            gr.update(value=examples[1], interactive=True),
+            gr.update(value=examples[2], interactive=True),
+            gr.update(value=examples[3], interactive=True),
+            gr.update(value=examples[4], interactive=True),
+            gr.update(value=examples[5], interactive=True),
+            gr.update(value=examples[6], interactive=True),
+            gr.update(value=examples[7], interactive=True),
+            gr.update(value=examples[8], interactive=True),
+            gr.update(value=examples[9], interactive=True),
+            gr.update(value=examples[10], interactive=True),
+            gr.update(value=examples[11], interactive=True),
+            gr.update(value=examples[12], interactive=True),
+            gr.update(value=examples[13], interactive=True),
+            gr.update(value=examples[14], interactive=True),
+            gr.update(value=examples[15], interactive=True),
+            gr.update(value=examples[16], interactive=True),
+            gr.update(value=examples[17], interactive=True),
+            gr.update(value=examples[18], interactive=True),
+            gr.update(value=examples[19], interactive=True),
+            gr.update(value=examples[20], interactive=True),
+            gr.update(value=examples[21], interactive=True)
+        ]
+        
+    def get_values(self):
+        return [
+            self.input_images.value,
+            self.filter_images.value,
+            self.contrast_variation.value,
+            self.brightness_variation.value,
+            self.blur_variation.value,
+            self.horizontal_flip_checkbox.value,
+            self.vertical_flip_checkbox.value,
+            "",
+            self.spermatozoon_head_color.value,
+            self.spermatozoon_head_highlight_color.value,
+            self.spermatozoon_neck_color.value,
+            self.spermatozoon_tail_color.value,
+            self.spermatozoon_droplet_color.value,
+            self.debris_color.value,
+            self.shadow_start_color.value,
+            self.shadow_end_color.value,
+            self.spermatozoon_scale_slider.value,
+            self.debris_scale_slider.value,
+            self.shadow_offset_slider.value,
+            self.shadow_scale_slider.value,
+            self.n_points_render_slider.value
         ]
         
     def init_components(self):
@@ -60,9 +115,9 @@ class StyleAdjustment:
         self.shadow_start_color = gr.ColorPicker(label="Shadow start", render=False, interactive=True)
         self.shadow_end_color = gr.ColorPicker(label="Shadow end", render=False, interactive=True)
         self.spermatozoon_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
-        self.debris_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
+        self.debris_scale_slider = gr.Slider(label="Debris scale", minimum=0.1, maximum=100, render=False, interactive=True)
         self.shadow_offset_slider = gr.Slider(label="Shadow offset", minimum=-10, maximum=10, render=False, interactive=True)
-        self.shadow_scale_slider = gr.Slider(label="Shadow scale", minimum=0, maximum=10, render=False, interactive=True)
+        self.shadow_scale_slider = gr.Slider(label="Shadow scale", minimum=0.0, maximum=10.0, render=False, interactive=True)
         self.n_points_render_slider = gr.Slider(label="N points to render", minimum=10, maximum=1000, render=False, interactive=True)
         
     def render(self):
@@ -76,6 +131,7 @@ class StyleAdjustment:
             with gr.Accordion("Image augmentation settings", open=False):
                 self.contrast_variation.render()
                 self.brightness_variation.render()
+                self.blur_variation = RangeSlider(label="Blur", minimum=0, maximum=101)
                 self.horizontal_flip_checkbox.render()
                 self.vertical_flip_checkbox.render()
                 
@@ -105,5 +161,6 @@ class StyleAdjustment:
                     self.shadow_offset_slider.render()
                     self.shadow_scale_slider.render()
                     self.n_points_render_slider.render()
+                    self.z_range = RangeSlider(label="Z range", minimum=0.5, maximum=1.5)
                     
             self.get_color_button.click(get_color, inputs=[self.color_image_input], outputs=[self.color_display])

@@ -57,15 +57,18 @@ class SpermatozoonFactory:
         Get a sample of the spermatozoon's morphology.
         :return: A sample of the spermatozoon's morphology
         """
-        morphology_probs = [self.species_dict[morphology]["probability"] for morphology in self.species_dict.keys()]
-        morphology = np.random.choice(list(self.species_dict.keys()), 1, p=morphology_probs)[0]
-
+        morphology_probs = [self.species_dict[morphology]["probability"] for morphology in self.style_dict["active_classes"]]
+        morphology_probs = 1/np.sum(morphology_probs) * np.array(morphology_probs)
+        morphology = np.random.choice(self.style_dict["active_classes"], 1, p=morphology_probs)[0]
         scale = self.style_dict["scale"]
         pose = Pose(
             x=UniformDistribution(0, resolution[0]-1).random_samples(),
             y=UniformDistribution(0, resolution[1]-1).random_samples(),
             angle=UniformDistribution(0, 360).random_samples(),
         )
+        z = UniformDistribution(a=self.style_dict["z_start"], b=self.style_dict["z_end"]).random_samples()
+        max_z = max(self.style_dict["z_end"] - 1, 1 - self.style_dict["z_start"])
+        blur = self.style_dict["blur_start"] + int((self.style_dict["blur_end"] - self.style_dict["blur_start"])*np.abs(1-z)/max_z)
         motion_list = np.random.choice(self.species_dict[morphology]["motions"]["list"], total_frames, p=self.species_dict[morphology]["motions"]["probabilities"])
         motion = Motion([globals()[item]() for item in motion_list], duration=total_frames)
         # Create Components
@@ -95,7 +98,6 @@ class SpermatozoonFactory:
             position=scale*NormalDistribution(mean=self.species_dict[morphology]["measurements"]["droplet"]["position"]["mean"], std=self.species_dict[morphology]["measurements"]["droplet"]["position"]["std"]).random_samples(),
             color=Color(r=self.style_dict["color"]["droplet"]["r"], g=self.style_dict["color"]["droplet"]["g"], b=self.style_dict["color"]["droplet"]["b"])
         ) if "droplet" in self.species_dict[morphology]["measurements"] else None
-            
         components = [head, neck, tail, droplet]
         components = [c for c in components if c is not None]
             
@@ -110,10 +112,13 @@ class SpermatozoonFactory:
         
         sperm = Spermatozoon(
             sperm_id=self.id_count,
+            morphology=morphology,
             pose=pose,
+            z=z,
             motion=motion,
             components=components,
             shadow=shadow,
+            blur=blur,
             n_points=self.style_dict["n_points"]
         )
         self.id_count += 1
@@ -177,7 +182,7 @@ if __name__ == "__main__":
         ax.grid(visible=True, linestyle='-', color='gray', alpha=1)
 
         spermatozoa_xs, spermatozoa_ys, spermatozoa_sizes, spermatozoa_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
-        shadow_xs, shadow_ys, shadow_sizes, shadow_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
+        shadow_xs, shadow_ys, shadow_sizes, shadow_rgba_colors, blurs = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         highlight_xs, highlight_ys, highlight_sizes, highlight_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         full_xs, full_ys, full_sizes, full_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         for s in spermatozoa:
@@ -188,11 +193,12 @@ if __name__ == "__main__":
             spermatozoa_sizes = np.concatenate((spermatozoa_sizes, sizes))
             spermatozoa_rgba_colors = np.concatenate((spermatozoa_rgba_colors, rgba_colors))
             
-            sxs, sys, ssizes, srgba_colors = s.add_shadows(xs, ys, sizes, rgba_colors)
+            sxs, sys, ssizes, srgba_colors, sblur = s.add_shadows(xs, ys, sizes, rgba_colors)
             shadow_xs= np.concatenate((shadow_xs, sxs))
             shadow_ys = np.concatenate((shadow_ys, sys))
             shadow_sizes = np.concatenate((shadow_sizes, ssizes))
             shadow_rgba_colors = np.concatenate((shadow_rgba_colors, srgba_colors))
+            blurs = np.concatenate((blurs, sblur))
             
             hxs, hys, hsizes, hrgba_colors = s.add_highlight(xs, ys, sizes, rgba_colors)
             highlight_xs = np.concatenate((highlight_xs, hxs))
@@ -204,6 +210,7 @@ if __name__ == "__main__":
         full_ys = np.concatenate((shadow_ys, spermatozoa_ys, highlight_ys))
         full_sizes = np.concatenate((shadow_sizes, spermatozoa_sizes, highlight_sizes))        
         full_rgba_colors = np.concatenate((shadow_rgba_colors, spermatozoa_rgba_colors, highlight_rgba_colors))
+
             
         render(ax, full_xs, full_ys, full_sizes, full_rgba_colors)
 

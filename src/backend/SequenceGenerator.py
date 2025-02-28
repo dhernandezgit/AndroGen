@@ -101,7 +101,6 @@ class SequenceGenerator:
         scatter = ax.scatter(xs, ys, s=fixed_sizes, marker='o', c=rgba_colors, edgecolors='none', linewidth=0)
 
     def generate_frame(self, save_path: str, name=None, t=0, elements=None):
-        os.makedirs(save_path, exist_ok=True)
         if elements is None:
             background, spermatozoa, debrises = self._generate_elements()
         else:
@@ -113,10 +112,11 @@ class SequenceGenerator:
         ax.imshow(background)
         
         element_xs, element_ys, element_sizes, element_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
-        shadow_xs, shadow_ys, shadow_sizes, shadow_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
+        shadow_xs, shadow_ys, shadow_sizes, shadow_rgba_colors, blurs = np.array([]), np.array([]), np.array([]), np.empty((0,4)), np.array([])
         highlight_xs, highlight_ys, highlight_sizes, highlight_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         full_xs, full_ys, full_sizes, full_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         for s in spermatozoa:
+            
             # Generate and render the spermatozoon
             xs, ys, sizes, rgba_colors = s.calculate_movement(t=t)
             element_xs = np.concatenate((element_xs, xs))
@@ -124,11 +124,12 @@ class SequenceGenerator:
             element_sizes = np.concatenate((element_sizes, sizes))
             element_rgba_colors = np.concatenate((element_rgba_colors, rgba_colors))
             
-            sxs, sys, ssizes, srgba_colors = s.add_shadows(xs, ys, sizes, rgba_colors)
+            sxs, sys, ssizes, srgba_colors, blur = s.add_shadows(xs, ys, sizes, rgba_colors)
             shadow_xs= np.concatenate((shadow_xs, sxs))
             shadow_ys = np.concatenate((shadow_ys, sys))
             shadow_sizes = np.concatenate((shadow_sizes, ssizes))
             shadow_rgba_colors = np.concatenate((shadow_rgba_colors, srgba_colors))
+            blurs = np.concatenate((blurs, blur))
             
             hxs, hys, hsizes, hrgba_colors = s.add_highlight(xs, ys, sizes, rgba_colors)
             highlight_xs = np.concatenate((highlight_xs, hxs))
@@ -144,11 +145,12 @@ class SequenceGenerator:
             element_sizes = np.concatenate((element_sizes, sizes))
             element_rgba_colors = np.concatenate((element_rgba_colors, rgba_colors))
             
-            xs, ys, sizes, rgba_colors = d.add_shadows(xs, ys, sizes, rgba_colors)
+            xs, ys, sizes, rgba_colors, blur = d.add_shadows(xs, ys, sizes, rgba_colors)
             shadow_xs = np.concatenate((shadow_xs, xs))
             shadow_ys = np.concatenate((shadow_ys, ys))
             shadow_sizes = np.concatenate((shadow_sizes, sizes))
             shadow_rgba_colors = np.concatenate((shadow_rgba_colors, rgba_colors))
+            blurs = np.concatenate((blurs, blur))
             
         full_xs = np.concatenate((shadow_xs, element_xs, highlight_xs))
         full_ys = np.concatenate((shadow_ys, element_ys, highlight_ys))
@@ -156,14 +158,57 @@ class SequenceGenerator:
         full_rgba_colors = np.concatenate((shadow_rgba_colors, element_rgba_colors, highlight_rgba_colors))
             
         self._render(ax, full_xs, full_ys, full_sizes, full_rgba_colors)
-        self._save_figure(fig, save_path, name)
+        self._save_figure(fig, os.path.join(save_path, "frames"), name)
         if self.image_augmentor is not None:
-            im = cv2.imread(os.path.join(save_path, name))
-            cv2.imwrite(os.path.join(save_path, name), self.image_augmentor.augment(im.copy(), num_images=1)[0])    
+            im = cv2.imread(os.path.join(save_path, "frames", name))
+            augmented_image, horizontal_flip, vertical_flip = self.image_augmentor.augment(im.copy(), num_images=1)
+            #cv2.imwrite(os.path.join(save_path, "frames", name), augmented_image[0])
+            im = augmented_image[0]
+        else:
+            im = cv2.imread(os.path.join(save_path, "frames", name))
+            horizontal_flip = [False]
+            vertical_flip = [False]
             
-            
-    def generate_sequence(self, output_dir: str):
+        fig_label, ax_label = self._generate_figure()
+        ax_label.imshow(np.zeros_like(background))
+        full_blur = shadow_rgba_colors.copy()
+        max_blur = int(np.max(blurs))
+        max_blur = max_blur if max_blur % 2 == 1 else max_blur + 1
+        full_blur[:,0] = blurs/255.0
+        full_blur[:,1] = blurs/255.0
+        full_blur[:,2] = blurs/255.0
+        full_blur[:,3] = 1
+        self._render(ax_label, shadow_xs, shadow_ys, shadow_sizes, full_blur)
+        self._save_figure(fig_label, os.path.join(save_path, "labels"), name)
+        if horizontal_flip[0] or vertical_flip[0]:
+            im_blur = cv2.imread(os.path.join(save_path, "labels", name))
+            if horizontal_flip[0]:
+                im_blur = cv2.flip(im_blur, 1)
+            if vertical_flip[0]:
+                im_blur = cv2.flip(im_blur, 0)
+            cv2.imwrite(os.path.join(save_path, "labels", name), im_blur)
+        else:
+            im_blur = cv2.imread(os.path.join(save_path, "labels", name))
+        blurred_image = np.zeros_like(im_blur)
+        #max_blurred_image = cv2.GaussianBlur(im, (max_blur, max_blur), 0)
+        #blurred_image = im*(1 - im_blur) + max_blurred_image*im_blur #cv2.addWeighted(im, 1 - im_blur, max_blurred_image, im_blur, 0)
+        im_blur[im_blur % 2 == 0] = im_blur[im_blur % 2 == 0] + 1
+        for k in np.unique(im_blur):
+            k = round(k)
+            if k < 3:
+                continue
+            blurred = cv2.GaussianBlur(im, (k, k), 0)
+            blurred_image[im_blur == k] = blurred[im_blur == k]
+
+        # Blend the blurred and original images
+        blurred_image = np.where(blurred_image > 0, blurred_image, im)
+        
+        cv2.imwrite(os.path.join(save_path, "frames", name), blurred_image.astype(np.uint8))
+        
+    def generate_sequence(self, output_dir: str, yield_progress=False):
         os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "frames"), exist_ok=True)
         self.sequence_config.update()
         self.params = self.sequence_config.getParameters()
         
@@ -190,7 +235,10 @@ class SequenceGenerator:
                 total=self.num_frames,
                 desc="Rendering frames"
             ):
-                pass
+                if yield_progress:
+                    yield 1
+                else:
+                    pass
         self.id += 1
         
             

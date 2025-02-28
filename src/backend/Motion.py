@@ -32,27 +32,27 @@ class Stationary(Movement):
 
 class RotatingStationary(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(0.0, 0.0), UniformDistribution(0.1, 0.2), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(0.0, 0.0), UniformDistribution(0.01, 0.02), UniformDistribution(10.0, 15.0))
 
 
 class SlowDrift(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(2.0, 8.0), UniformDistribution(0, 0), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(0.20, 0.8), UniformDistribution(0, 0), UniformDistribution(10.0, 15.0))
 
 
 class StraightMotion(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(50.0, 80.0), UniformDistribution(0, 0), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(5.0, 8.0), UniformDistribution(0, 0), UniformDistribution(10.0, 15.0))
 
 
 class GentleCurve(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(50.0, 80.0), UniformDistribution(0.5, 1.5), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(5.0, 8.0), UniformDistribution(0.05, 0.15), UniformDistribution(10.0, 15.0))
 
 
 class TightCurve(Movement):
     def __init__(self):
-        super().__init__(UniformDistribution(50.0, 60.0), UniformDistribution(1.5, 2.5), UniformDistribution(10.0, 15.0))
+        super().__init__(UniformDistribution(5.0, 6.0), UniformDistribution(0.15, 0.25), UniformDistribution(10.0, 15.0))
 
 
 class Motion:
@@ -81,6 +81,6 @@ class Motion:
     @staticmethod
     def smooth_transition(values, smoothing_factor=20):
         """Smooth transitions between segments using a moving average."""
-        smoothing_factor = min(len(values), smoothing_factor)
-        return np.convolve(np.array(values).flatten(), np.ones(smoothing_factor) / smoothing_factor, mode='same')
+        new_values = [values[0]]*int(smoothing_factor/2) + values + [values[-1]]*int(smoothing_factor/2)
+        return np.convolve(np.array(new_values).flatten(), np.ones(smoothing_factor) / smoothing_factor, mode='same')
     
