@@ -1,75 +1,72 @@
 {
     "color": {
         "head": {
-            "r": 228.0,
-            "g": 228.0,
-            "b": 228.0
+            "r": 15.0,
+            "g": 15.0,
+            "b": 15.0
         },
         "head_highlight": {
-            "r": 212.0,
-            "g": 212.0,
-            "b": 212.0
+            "r": 128.0,
+            "g": 131.0,
+            "b": 123.0
         },
         "neck": {
-            "r": 150.0,
-            "g": 150.0,
-            "b": 150.0
+            "r": 126.0,
+            "g": 126.0,
+            "b": 123.0
         },
         "tail": {
-            "r": 95.0,
-            "g": 95.0,
-            "b": 95.0
+            "r": 139.0,
+            "g": 139.0,
+            "b": 136.0
         },
         "droplet": {
-            "r": 228.0,
-            "g": 228.0,
-            "b": 228.0
+            "r": 86.0,
+            "g": 88.0,
+            "b": 82.0
         },
         "shadow_start": {
-            "r": 35.0,
-            "g": 35.0,
-            "b": 35.0
+            "r": 132.0,
+            "g": 132.0,
+            "b": 131.0
         },
         "shadow_end": {
-            "r": 35.0,
-            "g": 35.0,
-            "b": 35.0
+            "r": 200.0,
+            "g": 200.0,
+            "b": 194.0
         },
         "debris": {
-            "r": 228.0,
-            "g": 228.0,
-            "b": 228.0
+            "r": 86.0,
+            "g": 88.0,
+            "b": 82.0
         },
         "debris_shadow_start": {
-            "r": 35.0,
-            "g": 35.0,
-            "b": 35.0
+            "r": 132.0,
+            "g": 132.0,
+            "b": 131.0
         },
         "debris_shadow_end": {
-            "r": 35.0,
-            "g": 35.0,
-            "b": 35.0
+            "r": 200.0,
+            "g": 200.0,
+            "b": 194.0
         }
     },
     "shadow_n": 4,
-    "shadow_offset": -1,
+    "shadow_offset": -4,
     "shadow_starting_scale": 1,
-    "shadow_ending_scale": 4,
-    "debris_shadow_offset": -1,
-    "debris_shadow_starting_scale": 2,
-    "debris_shadow_ending_scale": 4,
+    "shadow_ending_scale": 3,
+    "debris_shadow_offset": -4,
+    "debris_shadow_starting_scale": 1,
+    "debris_shadow_ending_scale": 3,
     "debris_shadow_n": 4,
     "n_points": 100,
-    "scale": 1,
-    "debris_scale": 1,
-    "z_start": 0.95,
-    "z_end": 1.05,
-    "blur_start": 0.0,
-    "blur_end": 3.0,
+    "scale": 3,
+    "debris_scale": 3,
+    "z_start": 0.85,
+    "z_end": 1.15,
+    "blur_start": 7.0,
+    "blur_end": 61.0,
     "active_classes": [
-        "Normal",
-        "Proximal cytoplastmic droplet",
-        "Distal cytoplastmic droplet",
-        "Coiled tail"
+        "Normal"
     ]
 }

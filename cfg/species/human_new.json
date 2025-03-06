@@ -1,11 +1,52 @@
 {
   "Normal": {
-    "probability": 1.0,
+    "probability": 0.5,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
+      "cycle_amplitude": {
+        "min": 6.0,
+        "max": 16.0
+    },
+    "cycle_speed": {
+        "min": 40.0,
+        "max": 70.0
+      }
+    },
+    "measurements": {
+      "head": {
+        "length": {"mean": 8.0, "std": 1.2},
+        "width": {"mean": 4.3, "std": 0.3},
+        "scale_highlight": {"min": 0.4, "max": 0.8},
+        "offset_highlight": {"min": 0.0, "max": 0.3}
+      },
+      "neck": {
+        "length": {"mean": 4.0, "std": 0.7},
+        "width": {"mean": 1.6, "std": 0.3}
+      },
+      "tail": {
+        "length": {"mean": 46, "std": 6},
+        "width": {"mean": 2.0, "std": 0.1}
+      }
+    }
+  },
+  "Distal": {
+    "probability": 0.1,
+    "motions": {
+      "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
+      "probabilities": [0.7, 0.15, 0.1, 0.05]
+    },
+    "tail_movement": {
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
       "cycle_amplitude": {"min": 0.02, "max": 0.03},
       "cycle_speed": {"min": 100, "max": 100}
     },
@@ -13,46 +54,159 @@
       "head": {
         "length": {"mean": 11.0, "std": 1.4},
         "width": {"mean": 5.3, "std": 0.4},
-        "scale_highlight": {"min": 0.8, "max": 1},
-        "offset_highlight": {"min": 0, "max": 0.15}
+        "scale_highlight": {"min": 0.8, "max": 1.0},
+        "offset_highlight": {"min": 0.0, "max": 0.15}
       },
       "neck": {
-        "length": {"mean": 13.0, "std": 2.4},
+        "length": {"mean": 4.0, "std": 0.7},
         "width": {"mean": 1.6, "std": 0.3}
       },
       "tail": {
-        "length": {"mean": 29.5, "std": 3.7},
+        "length": {"mean": 40, "std": 6},
         "width": {"mean": 1.4, "std": 0.1}
+      },
+      "droplet": {
+        "diameter": {"mean": 1.2, "std": 0.7},
+        "position": {"mean": 2.8, "std": 0.5}
       }
     }
   },
-  "Distal": {
-    "probability": 0.0,
+  "Proximal cytoplastmic droplet": {
+    "probability": 0.1,
     "motions": {
       "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
       "probabilities": [0.7, 0.15, 0.1, 0.05]
     },
     "tail_movement": {
-      "angular_speed": {"min": 8, "max": 12},
-      "amplitude": {"min": 1.2, "max": 1.8}
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
     },
     "measurements": {
       "head": {
         "length": {"mean": 11.0, "std": 1.4},
         "width": {"mean": 5.3, "std": 0.4},
-        "scale_highlight": {"min": 0.4, "max": 0.6},
-        "offset_highlight": {"min": 0.2, "max": 0.3}
+        "scale_highlight": {"min": 0.8, "max": 1.0},
+        "offset_highlight": {"min": 0.0, "max": 0.15}
       },
       "neck": {
-        "length": {"mean": 13.0, "std": 2.4},
+        "length": {"mean": 4.0, "std": 0.7},
         "width": {"mean": 1.6, "std": 0.3}
       },
       "tail": {
-        "length": {"mean": 29.5, "std": 3.7},
+        "length": {"mean": 40, "std": 6},
         "width": {"mean": 1.4, "std": 0.1}
       },
       "droplet": {
-        "diameter": {"mean": 0.6, "std": 0.7},
+        "diameter": {"mean": 1.2, "std": 0.7},
+        "position": {"mean": 2.8, "std": 0.5}
+      }
+    }
+  },
+  "Distal cytoplastmic droplet": {
+    "probability": 0.1,
+    "motions": {
+      "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
+      "probabilities": [0.7, 0.15, 0.1, 0.05]
+    },
+    "tail_movement": {
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
+    },
+    "measurements": {
+      "head": {
+        "length": {"mean": 11.0, "std": 1.4},
+        "width": {"mean": 5.3, "std": 0.4},
+        "scale_highlight": {"min": 0.8, "max": 1.0},
+        "offset_highlight": {"min": 0.0, "max": 0.15}
+      },
+      "neck": {
+        "length": {"mean": 4.0, "std": 0.7},
+        "width": {"mean": 1.6, "std": 0.3}
+      },
+      "tail": {
+        "length": {"mean": 40, "std": 6},
+        "width": {"mean": 1.4, "std": 0.1}
+      },
+      "droplet": {
+        "diameter": {"mean": 1.2, "std": 0.7},
+        "position": {"mean": 2.8, "std": 0.5}
+      }
+    }
+  },
+  "Bent middle piece": {
+    "probability": 0.1,
+    "motions": {
+      "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
+      "probabilities": [0.7, 0.15, 0.1, 0.05]
+    },
+    "tail_movement": {
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
+    },
+    "measurements": {
+      "head": {
+        "length": {"mean": 11.0, "std": 1.4},
+        "width": {"mean": 5.3, "std": 0.4},
+        "scale_highlight": {"min": 0.8, "max": 1.0},
+        "offset_highlight": {"min": 0.0, "max": 0.15}
+      },
+      "neck": {
+        "length": {"mean": 4.0, "std": 0.7},
+        "width": {"mean": 1.6, "std": 0.3}
+      },
+      "tail": {
+        "length": {"mean": 40, "std": 6},
+        "width": {"mean": 1.4, "std": 0.1}
+      },
+      "droplet": {
+        "diameter": {"mean": 1.2, "std": 0.7},
+        "position": {"mean": 2.8, "std": 0.5}
+      }
+    }
+  },
+  "Coiled tail": {
+    "probability": 0.1,
+    "motions": {
+      "list": ["StraightMotion", "GentleCurve", "TightCurve", "SlowDrift"],
+      "probabilities": [0.7, 0.15, 0.1, 0.05]
+    },
+    "tail_movement": {
+    "cycle_n_waves": {
+      "min": 1,
+      "max": 2.5
+    },
+      "cycle_amplitude": {"min": 0.02, "max": 0.03},
+      "cycle_speed": {"min": 100, "max": 100}
+    },
+    "measurements": {
+      "head": {
+        "length": {"mean": 11.0, "std": 1.4},
+        "width": {"mean": 5.3, "std": 0.4},
+        "scale_highlight": {"min": 0.8, "max": 1.0},
+        "offset_highlight": {"min": 0.0, "max": 0.15}
+      },
+      "neck": {
+        "length": {"mean": 4.0, "std": 0.7},
+        "width": {"mean": 1.6, "std": 0.3}
+      },
+      "tail": {
+        "length": {"mean": 40, "std": 6},
+        "width": {"mean": 1.4, "std": 0.1}
+      },
+      "droplet": {
+        "diameter": {"mean": 2.8, "std": 0.7},
         "position": {"mean": 2.8, "std": 0.5}
       }
     }

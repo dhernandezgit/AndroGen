@@ -38,24 +38,25 @@ class DatasetMaker:
         self.dpi = dpi
         self.image_augmentor = image_augmentor
         self.sg = SequenceGenerator(self.num_frames, self.sequence_config, self.sf, self.df, self.bgg, self.dpi, self.image_augmentor)
-
         os.makedirs(self.output_dir, exist_ok=True)
 
-    def generate_sequence(self, n_seq, remove_old=True):
+    def generate_sequence(self, n_seq, remove_old=False):
         """
         Generate a single sequence.
         """
-        sequence_dir = os.path.join(self.output_dir, "frames")
+        sequence_dir_frames = os.path.join(self.output_dir, "frames")
         gif_dir = os.path.join(self.output_dir, "gifs")
+        os.makedirs(gif_dir, exist_ok=True)
+
         if remove_old:
-            if os.path.isdir(sequence_dir):
-                shutil.rmtree(sequence_dir)
+            if os.path.isdir(sequence_dir_frames):
+                shutil.rmtree(sequence_dir_frames)
             if os.path.isdir(gif_dir):
                 shutil.rmtree(gif_dir)
-        os.makedirs(gif_dir, exist_ok=True)
         
-        self.sg.generate_sequence(sequence_dir)
-        save_gif(sequence_dir, n_seq=n_seq, save_path=os.path.join(gif_dir, f"{n_seq:06d}.gif"), duration=100, loop=0)
+        for _ in self.sg.generate_sequence(self.output_dir, yield_progress=False):
+            ...
+        save_gif(sequence_dir_frames, n_seq=n_seq, save_path=os.path.join(gif_dir, f"{n_seq:06d}.gif"), duration=100, loop=0)
 
 
     def generate_dataset(self):

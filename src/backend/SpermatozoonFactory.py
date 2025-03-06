@@ -90,6 +90,7 @@ class SpermatozoonFactory:
             height=scale*NormalDistribution(mean=self.species_dict[morphology]["measurements"]["tail"]["length"]["mean"], std=self.species_dict[morphology]["measurements"]["tail"]["length"]["std"]).random_samples(),
             cycle_amplitude=UniformDistribution(a=self.species_dict[morphology]["tail_movement"]["cycle_amplitude"]["min"], b=self.species_dict[morphology]["tail_movement"]["cycle_amplitude"]["max"]).random_samples(),
             cycle_speed=UniformDistribution(a=self.species_dict[morphology]["tail_movement"]["cycle_speed"]["min"], b=self.species_dict[morphology]["tail_movement"]["cycle_speed"]["max"]).random_samples(),
+            cycle_n_waves=UniformDistribution(a=self.species_dict[morphology]["tail_movement"]["cycle_n_waves"]["min"], b=self.species_dict[morphology]["tail_movement"]["cycle_n_waves"]["max"]).random_samples(),
             color=Color(r=self.style_dict["color"]["tail"]["r"], g=self.style_dict["color"]["tail"]["g"], b=self.style_dict["color"]["tail"]["b"]),
             angle_phase=UniformDistribution(0, 2*math.pi).random_samples()
         ) if "tail" in self.species_dict[morphology]["measurements"] else None

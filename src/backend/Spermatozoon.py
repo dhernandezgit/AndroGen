@@ -70,10 +70,11 @@ class Neck(SpermatozoonComponent):
         return lengths, sizes, colors, alphas
 
 class Tail(SpermatozoonComponent):
-    def __init__(self, width: int, height: int, color: Color, cycle_amplitude: float, cycle_speed: float, total_angle=4, angle_phase=0, n_points=100):
+    def __init__(self, width: int, height: int, color: Color, cycle_amplitude: float, cycle_speed: float, cycle_n_waves: float, total_angle=4, angle_phase=0, n_points=100):
         super().__init__(width, height, color, n_points)
         self.cycle_amplitude = cycle_amplitude
         self.cycle_speed = cycle_speed
+        self.cycle_n_waves = cycle_n_waves
         self.total_angle = total_angle
         self.angle_phase = angle_phase
 
@@ -205,6 +206,7 @@ class Spermatozoon:
     
         cycle_amplitude = self.tail[0].cycle_amplitude if self.tail else 0
         cycle_speed = self.tail[0].cycle_speed if self.tail else 0
+        cycle_n_waves = self.tail[0].cycle_n_waves if self.tail else 1
 
         total_angle = self.tail[0].total_angle if self.tail else 0
         angle_phase = self.tail[0].angle_phase if self.tail else 0
@@ -213,7 +215,7 @@ class Spermatozoon:
         
         x_total = v_scale*3000
         x = np.linspace(0, x_total/self.length, self.n_points+2)
-        y = np.sin(x-cycle_speed*v_scale*t*self.dt + angle_phase) * np.linspace(0, v_scale * cycle_amplitude, self.n_points+2) * np.power(np.linspace(0.5, 1, self.n_points+2), 2)
+        y = np.sin(x*cycle_n_waves-cycle_speed*v_scale*t*self.dt + angle_phase) * np.linspace(0, v_scale * cycle_amplitude, self.n_points+2) * np.power(np.linspace(0.5, 1, self.n_points+2), 2)
         dx = np.diff(x)
         dy = np.diff(y)
         angles = np.diff(np.arctan2(dy, dx))

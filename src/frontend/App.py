@@ -99,15 +99,22 @@ class App:
         #for input_element, value in zip(self.input_list, self.examples_processed[index]):
         #    input_element.value = value
 
-    def _save_example(self, example_name):
+    def _save_example(self, example_name, *input_list):
         self.examples_data = read_json(os.path.join('cfg', 'examples.json'))
-        print(self.examples_data)
-        return gr.update(example_labels=self.examples_data["names"])
+        print(input_list)
+        #parameter_selection_values = self.parameter_selection.get_values()
+        
+        #self.style_adjustment.set_values(self.examples_data, i) + self.parameter_selection.set_values(self.examples_data, i) + self.data_generation.set_values(self.examples_data, i)
+        #self.examples_processed = [self.style_adjustment.read_examples(self.examples_data, i)+
+        #                           self.parameter_selection.read_examples(self.examples_data, i)+
+        #                           self.data_generation.read_examples(self.examples_data, i) for i, name in enumerate(self.examples_data["names"])]
+        #images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
+        return gr.update(value=self.examples_data["names"])
     
     def _example_select(self, evt: gr.SelectData):
         index = evt.index  # Get index of clicked image
         values = self._set_values(i=index)
-        return values + [gr.update(open = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
+        return values + [gr.update(open = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(columns = [7]), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
         
     def _update_background_generator(self, images, contrast, brightness, horizontal_flip, vertical_flip, n_images_out=9):
         self.sequence_config.update()
@@ -242,7 +249,7 @@ class App:
         ia = ImageAugmentor(contrast=params['contrast'], brightness=params['brightness'], horizontal_flip=params['horizontal_flip'], vertical_flip=params['vertical_flip'])
         sg = SequenceGenerator(n_frames, self.sequence_config, self.sf, self.df, self.bgg)
         progress = gr.Progress(track_tqdm=True)
-        for i in progress.tqdm(sg.generate_sequence(output_dir=self.test_sequence_path, yield_progress=True), total=n_frames, desc="Generating synthetic frames..."):
+        for _ in progress.tqdm(sg.generate_sequence(output_dir=self.test_sequence_path, yield_progress=True), total=n_frames, desc="Generating synthetic frames..."):
             ...
             
         save_gif(os.path.join(self.test_sequence_path, "frames"), 0)
@@ -256,15 +263,17 @@ class App:
         return [not state, gr.update(active = False)]
     
     def _generate_sequence_timer(self, n_frames, extra_images = 9):
-        return [self._generate_sequence(n_frames=25, extra_images = 9)]
+        return [self._generate_sequence(n_frames=25, extra_images = 9, yield_progress=True)]
         
-    def _generate_dataset(self, dataset_name, save_folder, n_sequences, n_frames_sequence, seed):
+    def _generate_dataset(self, dataset_name, save_folder, n_sequences, n_frames_sequence, seed=42):
         #np.random.seed(int(seed))
         #random.seed(int(seed))
         params = self.sequence_config.getParameters()['Sequence.augmentation']
         ia = ImageAugmentor(contrast=params['contrast'], brightness=params['brightness'], horizontal_flip=params['horizontal_flip'], vertical_flip=params['vertical_flip'])
         dm = DatasetMaker(num_sequences=int(n_sequences), num_frames=int(n_frames_sequence), sequence_config=self.sequence_config, sf=self.sf, df=self.df, bgg=self.bgg, output_dir=os.path.join(save_folder, dataset_name), image_augmentor=ia)
-        yield from dm.generate_dataset()
+        progress = gr.Progress(track_tqdm=True)
+        for _ in progress.tqdm(dm.generate_dataset(), total=n_sequences, desc="Generating synthetic dataset..."):
+            ...
     
     def init_components(self):
         custom_css = """
@@ -310,7 +319,7 @@ class App:
                     self.data_generation.render()
                     with gr.Group():
                         images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
-                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=[3], rows=[1], interactive=True, height="5%", allow_preview=False)
+                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=[3], rows=[1], interactive=True, height="10%", allow_preview=False)
                         self.examples_markdown.render()
                         self.timer.render()
                         self.tick_state.render()
@@ -318,8 +327,8 @@ class App:
                             self.example_text.render()
                             self.examples_save_button.render()
 
-            self.examples_gallery.select(self._example_select, None, [*self.input_list, self.col_left, self.data_generation.output, self.data_generation.generate_button, self.data_generation.advanced_settings, self.example_text, self.examples_save_button, self.examples_markdown, self.timer])
-            self.examples_save_button.click(self._save_example, self.example_text, None)
+            self.examples_gallery.select(self._example_select, None, [*self.input_list, self.col_left, self.data_generation.output, self.data_generation.generate_button, self.data_generation.advanced_settings, self.examples_gallery, self.example_text, self.examples_save_button, self.examples_markdown, self.timer])
+            self.examples_save_button.click(self._save_example, [self.example_text, *self.input_list], None)
             self.timer.tick(self._tick, [self.tick_state], [self.tick_state, self.timer])
             self.tick_state.change(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
             tab_start.select(lambda: (gr.update(width="20%")), None, [self.col_left])
@@ -361,10 +370,10 @@ class App:
             self.parameter_selection.n_debris.change(self._update_config, [gr.State("debris_n"), self.parameter_selection.n_debris], None)
                 
             self.data_generation.generate_button.click(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
-            self.data_generation.create_dataset_button.click(self._generate_dataset, [self.data_generation.dataset_name, self.data_generation.save_folder, self.data_generation.text_n_sequences, self.data_generation.text_n_frames_sequence, self.data_generation.text_seed], [self.data_generation.output])
+            self.data_generation.create_dataset_button.click(self._generate_dataset, [self.data_generation.dataset_name, self.data_generation.save_folder, self.data_generation.text_n_sequences, self.data_generation.text_n_frames_sequence], [self.data_generation.output]) #, self.data_generation.text_seed
     
     def launch(self):    
-        self.app.launch(allowed_paths=["/media/daniel/TOSHIBA_EXT"], share=False, debug=True)
+        self.app.launch(share=False, debug=True)
         # Load example 0
         
 

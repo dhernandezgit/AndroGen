@@ -15,7 +15,6 @@ def save_gif(input_folder, n_seq:int,save_path="resources/temp.gif", duration=10
     # Open images and append them to a list
     frames = [Image.open(os.path.join(input_folder, img)) for img in image_list]
     
-
     # Save as an animated GIF
     frames[0].save(
         os.path.join(os.getcwd(), save_path),

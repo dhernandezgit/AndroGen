@@ -178,7 +178,8 @@ class SequenceGenerator:
         full_blur[:,1] = blurs/255.0
         full_blur[:,2] = blurs/255.0
         full_blur[:,3] = 1
-        self._render(ax_label, shadow_xs, shadow_ys, shadow_sizes, full_blur)
+        shadow_sizes += 1
+        self._render(ax_label, shadow_xs[::-1], shadow_ys[::-1], shadow_sizes[::-1], full_blur)
         self._save_figure(fig_label, os.path.join(save_path, "labels"), name)
         if horizontal_flip[0] or vertical_flip[0]:
             im_blur = cv2.imread(os.path.join(save_path, "labels", name))
@@ -218,7 +219,6 @@ class SequenceGenerator:
         # Launch threads in a loop
         #for t in tqdm.tqdm(range(self.num_frames)):
         #    self.generate_frame(save_path, f"{t:06d}.png", t, elements)
-            
         tasks = [
             (self, output_dir, f"{self.id:06d}_{t:06d}.png", t, elements)
             for t in range(self.num_frames)

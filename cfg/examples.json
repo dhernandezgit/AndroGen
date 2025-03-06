@@ -2,24 +2,24 @@
     "style_adjustment": [
         {"files": "resources/examples/predefined_background/VISEM",
          "filter_images": true,
-         "contrast": 0.3,
+         "contrast": 0.1,
          "brightness": 0.1,
-         "blur": [0, 5],
+         "blur": [7, 11],
          "horizontal_flip": true,
          "vertical_flip": true,
          "annotation": "resources/examples/predefined_background/VISEM/22_frame_16.jpg",
-         "spermatozoon_head_color": "rgba(79, 75, 88, 1)",
-         "spermatozoon_head_highlight_color": "rgba(252, 239, 255, 1)",
-         "spermatozoon_neck_color": "rgba(42, 42, 42, 1)",
-         "spermatozoon_tail_color": "rgba(64, 59, 64, 1)",
+         "spermatozoon_head_color": "rgba(79, 82, 101, 1)",
+         "spermatozoon_head_highlight_color": "rgba(252, 255, 255, 1)",
+         "spermatozoon_neck_color": "rgba(46, 46, 56, 1)",
+         "spermatozoon_tail_color": "rgba(55, 50, 61, 1)",
          "spermatozoon_droplet_color": "rgba(42, 37, 41, 1)",
-         "debris_color": "rgba(40, 40, 40, 1)",
+         "debris_color": "rgba(38, 32, 71, 1)",
          "shadow_start_color": "rgba(255, 255, 255, 1)",
          "shadow_end_color": "rgba(113, 104, 97, 1)",
-         "spermatozoon_scale_slider": 3.5,
+         "spermatozoon_scale_slider": 2.5,
          "debris_scale_slider": 3.5,
          "shadow_offset_slider": -1,
-         "shadow_scale_slider": 2.5,
+         "shadow_scale_slider": 3.2,
          "n_points_render_slider": 100,
          "z_range": [0.9, 1.1],
          "active_classes": ["Normal"]
@@ -28,7 +28,7 @@
          "filter_images": true, 
          "contrast": 0.3,
          "brightness": 0.1,
-         "blur": [11, 61],
+         "blur": [7, 61],
          "horizontal_flip": true,
          "vertical_flip": true,
          "annotation": "resources/examples/predefined_background/SVIA/S_0068_0016.png",
@@ -43,7 +43,7 @@
          "spermatozoon_scale_slider": 3.5,
          "debris_scale_slider": 3.5,
          "shadow_offset_slider": -4,
-         "shadow_scale_slider": 3.2,
+         "shadow_scale_slider": 3.0,
          "n_points_render_slider": 100,
          "z_range": [0.85, 1.15],
         "active_classes": ["Normal"]
@@ -78,19 +78,19 @@
             "species": "human_new",
             "n_spermatozoa": [24, 44],
             "debris_rendering": true,
-            "n_debris": [80, 120]
+            "n_debris": [350, 700]
         },
         {
             "species": "human",
             "n_spermatozoa": [17, 27],
             "debris_rendering": true,
-            "n_debris": [80, 120]
+            "n_debris": [240, 360]
         },
         {
             "species": "boar",
             "n_spermatozoa": [130, 210],
             "debris_rendering": true,
-            "n_debris": [80, 120]
+            "n_debris": [240, 360]
         }
     ],
     "data_generation": [
