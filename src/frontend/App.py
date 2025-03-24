@@ -4,6 +4,7 @@ sys.path.append(os.path.abspath('.'))
 import configparser
 import shutil
 import numpy as np
+import cv2
 
 import gradio as gr
 from src.frontend.Start import Start
@@ -22,7 +23,7 @@ from src.backend.ConfigParser import SequenceConfig, DatasetConfig
 from src.backend.SequenceGenerator import SequenceGenerator
 from src.backend.DatasetMaker import DatasetMaker
 from src.backend.ImageAugmentor import ImageAugmentor
-from src.backend.utils import save_gif, read_json, update_json
+from src.backend.utils import save_gif, read_json, update_json, write_json
 
 class App:
     def __init__(self, config_path):
@@ -56,9 +57,9 @@ class App:
                                    self.parameter_selection.read_examples(self.examples_data, i)+
                                    self.data_generation.read_examples(self.examples_data, i) for i, name in enumerate(self.examples_data["names"])]
         self.example_text = gr.Textbox(placeholder="Example name", label="Example name", interactive=True, render=False, visible=False)
-        self.examples_save_button = gr.Button("Save new example", render=False, interactive=True, visible=False)
-        self.examples_markdown = gr.Textbox(label="", value="Click on an example to start", render=False, visible=True, interactive=False)
-        self.timer = gr.Timer(active=False, value=1, render=False)
+        self.examples_save_button = gr.Button("Save new example 💾", render=False, interactive=True, visible=False)
+        self.examples_markdown = gr.Markdown("# Click on an example to start", render=False, visible=True)
+        self.timer = gr.Timer(active=False, value=2, render=False)
         self.tick_state = gr.State(value=False, render=False)
         self.init_components()
         
@@ -73,6 +74,7 @@ class App:
                         self.style_adjustment.blur_variation,
                         self.style_adjustment.horizontal_flip_checkbox,
                         self.style_adjustment.vertical_flip_checkbox,
+                        self.style_adjustment.color_image_input,
                         self.style_adjustment.color_image_input,
                         self.style_adjustment.spermatozoon_head_color,
                         self.style_adjustment.spermatozoon_head_highlight_color,
@@ -100,28 +102,54 @@ class App:
         #    input_element.value = value
 
     def _save_example(self, example_name, *input_list):
-        self.examples_data = read_json(os.path.join('cfg', 'examples.json'))
-        print(input_list)
-        #parameter_selection_values = self.parameter_selection.get_values()
-        
+        self.examples_data = read_json(os.path.join('cfg', 'examples.json')) 
         #self.style_adjustment.set_values(self.examples_data, i) + self.parameter_selection.set_values(self.examples_data, i) + self.data_generation.set_values(self.examples_data, i)
-        #self.examples_processed = [self.style_adjustment.read_examples(self.examples_data, i)+
-        #                           self.parameter_selection.read_examples(self.examples_data, i)+
-        #                           self.data_generation.read_examples(self.examples_data, i) for i, name in enumerate(self.examples_data["names"])]
+        indexes = [0, len(self.examples_data["style_adjustment"][0])-1, len(self.examples_data["parameter_selection"][0]), len(self.examples_data["data_generation"][0])]
+        style_adjustment_example = input_list[indexes[0]:indexes[1]]
+        parameter_selection_example = input_list[indexes[1]:indexes[1]+indexes[2]]
+        data_generation_example = input_list[indexes[1]+indexes[2]:indexes[1]+indexes[2]+indexes[3]]
+        
+        generated_path = os.path.join("resources/examples/predefined_generated_images",f"S{example_name}.png")
+        real_path = os.path.join("resources/examples/predefined_background_file",f"{example_name}.png")
+        bg_path = os.path.join("resources/examples/predefined_background", example_name)
+        
+        shutil.copy("/home/daniel/Documents/Projects/Tesis/AndroGen/resources/sample/frames/000000_000000.png", generated_path)
+        cv2.imwrite(real_path, style_adjustment_example[7])
+        os.makedirs(bg_path, exist_ok=True)
+        for f in style_adjustment_example[0]:
+            shutil.copy(f, os.path.join(bg_path, f.split("/")[-1]))
+        style_adjustment_example = (bg_path,) + style_adjustment_example[1:7] + (real_path, generated_path,) + style_adjustment_example[9:]
+        
+        self.examples_data["names"].append(example_name)
+        style_adjustment_example_dict = {}
+        for key, value in zip(self.examples_data["style_adjustment"][0].keys(), style_adjustment_example):
+            style_adjustment_example_dict[key] = value
+        style_adjustment_example_dict["active_classes"] = "Normal"
+        self.examples_data["style_adjustment"].append(style_adjustment_example_dict)
+        parameter_selection_example_dict = {}
+        for key, value in zip(self.examples_data["parameter_selection"][0].keys(), parameter_selection_example):
+            parameter_selection_example_dict[key] = value
+        self.examples_data["parameter_selection"].append(parameter_selection_example_dict)
+        data_generation_example_dict = {}
+        for key, value in zip(self.examples_data["data_generation"][0].keys(), data_generation_example):
+            data_generation_example_dict[key] = int(value)
+        self.examples_data["data_generation"].append(data_generation_example_dict)
+        write_json(os.path.join('cfg', 'examples.json'), self.examples_data)
+        
         #images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
-        return gr.update(value=self.examples_data["names"])
+        return [(example["annotation"], self.examples_data["names"][i]) for i, example in enumerate(self.examples_data["style_adjustment"])]
     
     def _example_select(self, evt: gr.SelectData):
         index = evt.index  # Get index of clicked image
         values = self._set_values(i=index)
-        return values + [gr.update(open = True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(columns = [7]), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
+        return values + [gr.update(scale = 4), gr.update(visible=True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(columns = [7]), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
         
     def _update_background_generator(self, images, contrast, brightness, horizontal_flip, vertical_flip, n_images_out=9):
         self.sequence_config.update()
         if len(images) < 1:  # Check if the list of images is empty
             raise gr.Error("Please select at least one image.")
         elif len(images) == 1:  # If there is only one image, use it as the background
-            self.bgg.setGenerationMethod('single', single_image_path=images[0])
+            self.bgg.setGenerationMethod('single', paths=images[0])
             bg = self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution'])
             ia = ImageAugmentor(contrast=contrast, brightness=brightness, horizontal_flip=horizontal_flip, vertical_flip=vertical_flip)
             return ia.augment(bg, num_images=n_images_out)
@@ -277,22 +305,26 @@ class App:
     
     def init_components(self):
         custom_css = """
+        h1 {
+            text-align: center;
+            display:block;
+        }
         #file-uploader {
             max-height: 150px; /* Adjust the height as needed */
             overflow-y: auto; /* Enable scrolling if content overflows */
             border: 1px solid #ccc; /* Optional: Add a border for better visibility */
             padding: 5px; /* Optional: Add some padding for better spacing */
         }
-
         #examples-container {
             background-color: #d67f29; /* Coral orange background for Examples */
             padding: 5px;
-        }
+            
         """
-        with gr.Blocks(css=custom_css, fill_width=True, fill_height=True, theme=gr.themes.Soft()) as self.app:
+        with gr.Blocks(css=custom_css, fill_width=True, delete_cache=(60, 1200), fill_height=True, theme=gr.themes.Soft()) as self.app:
             with gr.Row():
-                with gr.Sidebar(width="35%", open=False) as self.col_left:
-                    with gr.Tabs():
+                #with gr.Sidebar(width="35%", open=False) as self.col_left:
+                with gr.Column(scale=999999999) as self.col_left:
+                    with gr.Tabs(visible=False) as self.col_left_group:
                         with gr.TabItem("Start") as tab_start:
                             self.start.render()
                         with gr.TabItem("Image parameters") as tab_style_adjustment:
@@ -300,6 +332,15 @@ class App:
                         with gr.TabItem("Cell parameters") as tab_parameter_selection:
                             self.parameter_selection.render()
                     self._init_inputs(index=0)
+                    with gr.Accordion("", open=True) as self.examples_accordion:
+                        images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
+                        self.examples_markdown.render()
+                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
+                        self.timer.render()
+                        self.tick_state.render()
+                        with gr.Column(scale=1):
+                            self.example_text.render()
+                            self.examples_save_button.render()
                     #with gr.Group():
                     #    with gr.Row():
                     #        with gr.Column(scale=1):
@@ -315,25 +356,16 @@ class App:
                     #        with gr.Column(scale=1):
                     #            self.example_text.render()
                     #            self.examples_save_button.render()
-                with gr.Column() as self.col_right:
+                with gr.Column(scale=4) as self.col_right:
                     self.data_generation.render()
-                    with gr.Group():
-                        images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
-                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=[3], rows=[1], interactive=True, height="10%", allow_preview=False)
-                        self.examples_markdown.render()
-                        self.timer.render()
-                        self.tick_state.render()
-                        with gr.Column(scale=1):
-                            self.example_text.render()
-                            self.examples_save_button.render()
 
-            self.examples_gallery.select(self._example_select, None, [*self.input_list, self.col_left, self.data_generation.output, self.data_generation.generate_button, self.data_generation.advanced_settings, self.examples_gallery, self.example_text, self.examples_save_button, self.examples_markdown, self.timer])
-            self.examples_save_button.click(self._save_example, [self.example_text, *self.input_list], None)
+            self.examples_gallery.select(self._example_select, None, [*self.input_list, self.col_left, self.col_left_group, self.data_generation.output, self.data_generation.generate_button, self.data_generation.advanced_settings, self.examples_gallery, self.example_text, self.examples_save_button, self.examples_markdown, self.timer])
+            self.examples_save_button.click(self._save_example, [self.example_text, *self.input_list], [self.examples_gallery])
             self.timer.tick(self._tick, [self.tick_state], [self.tick_state, self.timer])
             self.tick_state.change(self._generate_sequence, [self.data_generation.text_n_frames_sequence], [self.data_generation.output])
-            tab_start.select(lambda: (gr.update(width="20%")), None, [self.col_left])
-            tab_style_adjustment.select(lambda: (gr.update(width="50%")), None, [self.col_left])
-            tab_parameter_selection.select(lambda: (gr.update(width="50%")), None, [self.col_left])
+            tab_start.select(lambda: (gr.update(scale=4)), None, [self.col_left])
+            tab_style_adjustment.select(lambda: (gr.update(scale=4)), None, [self.col_left])
+            tab_parameter_selection.select(lambda: (gr.update(scale=4)), None, [self.col_left])
             
             self.style_adjustment.background_button.click(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
             self.style_adjustment.input_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
@@ -373,7 +405,7 @@ class App:
             self.data_generation.create_dataset_button.click(self._generate_dataset, [self.data_generation.dataset_name, self.data_generation.save_folder, self.data_generation.text_n_sequences, self.data_generation.text_n_frames_sequence], [self.data_generation.output]) #, self.data_generation.text_seed
     
     def launch(self):    
-        self.app.launch(share=False, debug=True)
+        self.app.launch(allowed_paths=["/media/daniel/TOSHIBA_EXT"], share=False, debug=True)
         # Load example 0
         
 

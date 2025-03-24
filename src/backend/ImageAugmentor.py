@@ -59,11 +59,19 @@ class ImageAugmentor:
         vertical_flips = []
         for augmented_image in augmented_images:
             transform_names = [aug["__class_fullname__"] for aug in augmented_image["replay"]["transforms"]]
-            horizontal_flip_index = transform_names.index("HorizontalFlip")
-            vertical_flip_index = transform_names.index("VerticalFlip")
+            if "HorizontalFlip" in transform_names:
+                horizontal_flips.append(True)
+            else:
+                horizontal_flips.append(False)
+            if "VerticalFlip" in transform_names:
+                vertical_flips.append(True)
+            else:
+                vertical_flips.append(False)
+            #horizontal_flip_index = transform_names.index("HorizontalFlip")
+            #vertical_flip_index = transform_names.index("VerticalFlip")
             images.append(augmented_image["image"])
-            horizontal_flips.append(augmented_image["replay"]["transforms"][horizontal_flip_index]["applied"])
-            vertical_flips.append(augmented_image["replay"]["transforms"][vertical_flip_index]["applied"])
+            #horizontal_flips.append(augmented_image["replay"]["transforms"][horizontal_flip_index]["applied"])
+            #vertical_flips.append(augmented_image["replay"]["transforms"][vertical_flip_index]["applied"])
         return images, horizontal_flips, vertical_flips
 
 def row_shift_filter_optimized(image, mask, X=10, Y=5):

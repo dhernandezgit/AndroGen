@@ -23,6 +23,7 @@ class StyleAdjustment:
             example["horizontal_flip"],
             example["vertical_flip"],
             example["annotation"],
+            example["annotation_generated"],
             example["spermatozoon_head_color"],
             example["spermatozoon_head_highlight_color"],
             example["spermatozoon_neck_color"],
@@ -63,7 +64,8 @@ class StyleAdjustment:
             gr.update(value=examples[18], interactive=True),
             gr.update(value=examples[19], interactive=True),
             gr.update(value=examples[20], interactive=True),
-            gr.update(value=examples[21], interactive=True)
+            gr.update(value=examples[21], interactive=True),
+            gr.update(value=examples[22], interactive=True)
         ]
         
     def get_values(self):
@@ -75,6 +77,7 @@ class StyleAdjustment:
             self.blur_variation.value,
             self.horizontal_flip_checkbox.value,
             self.vertical_flip_checkbox.value,
+            "",
             "",
             self.spermatozoon_head_color.value,
             self.spermatozoon_head_highlight_color.value,

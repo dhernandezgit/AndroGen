@@ -30,6 +30,11 @@ def read_json(path):
         with open(path, "r") as f:
             data = json.load(f)
         return data
+    
+def write_json(path, data):
+    with json_semaphore:
+        with open(path, 'w') as file:
+            json.dump(data, file, indent=4)
 
 def update_json(path, updates):
     """

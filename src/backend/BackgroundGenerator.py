@@ -79,7 +79,7 @@ class BackgroundGenerator:
         if resolution is not None:
             width, height = resolution
             # Resize the image to the specified dimensions
-            background = cv2.resize(background, (width, height), interpolation=cv2.INTER_LINEAR)
+            background = cv2.resize(cv2.cvtColor(background, cv2.COLOR_BGR2RGB), (width, height), interpolation=cv2.INTER_LINEAR)
     
         return background
 

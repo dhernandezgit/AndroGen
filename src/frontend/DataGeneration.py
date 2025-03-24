@@ -28,10 +28,10 @@ class DataGeneration:
 
     def init_components(self):
         # Original Gradio components from DataGeneration section
-        self.output = gr.Gallery(label="Output", preview=True, columns=3, interactive=False, render=False, visible=False, scale=5, selected_index=0)
+        self.output = gr.Gallery(label="Output", preview=True, columns=3, interactive=False, render=False, visible=False, scale=7, selected_index=0)
         #self.output = ImageSlider(value=["data/quality_score/real-test/9.png", "data/quality_score/new_synthetic/frames/000000_000003.png"], label="Output", interactive=False, render=False)
-        self.generate_button = gr.Button("Generate sample", render=False, visible=False)
-        self.create_dataset_button = gr.Button("Create dataset", render=False)
+        self.generate_button = gr.Button("Generate sample 🖼️", render=False, visible=False)
+        self.create_dataset_button = gr.Button("Create dataset 🗃️", render=False)
         self.dataset_name = gr.Textbox(value="SyntheticDataset", label="Dataset Name", placeholder="Enter the dataset name here", interactive=True, render=False)
         self.save_folder = gr.Textbox(value=os.getcwd(),label="Save Folder", placeholder="Enter the folder path to save images", interactive=True, render=False)
         self.text_n_sequences = gr.Textbox(value="100", label="Number of sequences", interactive=True, render=False)
@@ -44,7 +44,7 @@ class DataGeneration:
             self.output.render()
             self.generate_button.render()
                 
-            with gr.Accordion("Create synthetic dataset", open=False, visible=False) as self.advanced_settings:
+            with gr.Accordion("Create synthetic dataset", open=True, visible=False) as self.advanced_settings:
                 with gr.Row():
                     self.dataset_name.render()
                     self.save_folder.render()

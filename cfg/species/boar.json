@@ -18,7 +18,7 @@
       "tail_movement": {
     "cycle_n_waves": {
       "min": 1,
-      "max": 2.5
+      "max": 2.25
     },
           "cycle_amplitude": {
               "min": 8.0,
