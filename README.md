@@ -1,4 +1,11 @@
-# AndroGen
+# AndroGen – Synthetic Sperm Image Generator
+ 
+✅ The codebase is complete and fully functional.  
+📄 Deployment documentation is currently under preparation and will be available in the coming days.
+ 
+Thank you for your interest in **AndroGen**. Stay tuned for detailed setup instructions and usage examples.
+
+# Resources
 [Resources files](https://urjc-my.sharepoint.com/:u:/g/personal/daniel_hernandezf_urjc_es/EW9FoIJy12VCtUgT5LfPCFgBinTo4qCM4AMKxymAo4L96Q?e=hyB8Po)
 
 # License
