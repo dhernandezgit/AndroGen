@@ -56,8 +56,8 @@ class App:
         self.examples_processed = [self.style_adjustment.read_examples(self.examples_data, i)+
                                    self.parameter_selection.read_examples(self.examples_data, i)+
                                    self.data_generation.read_examples(self.examples_data, i) for i, name in enumerate(self.examples_data["names"])]
-        self.example_text = gr.Textbox(placeholder="Example name", label="Example name", interactive=True, render=False, visible=False)
-        self.examples_save_button = gr.Button("Save new example 💾", render=False, interactive=True, visible=False)
+        self.example_text = gr.Textbox(placeholder="Preset 1", label="Custom preset name", interactive=True, render=False, visible=False)
+        self.examples_save_button = gr.Button("Save current configuration as preset 💾", render=False, interactive=True, visible=False)
         self.examples_markdown = gr.Markdown("# Click on an example to start", render=False, visible=True)
         self.timer = gr.Timer(active=False, value=2, render=False)
         self.tick_state = gr.State(value=False, render=False)
@@ -320,6 +320,17 @@ class App:
             padding: 5px;
             
         """
+        
+        js_func = """
+        function refresh() {
+            const url = new URL(window.location);
+
+            if (url.searchParams.get('__theme') !== 'dark') {
+                url.searchParams.set('__theme', 'dark');
+                window.location.href = url.href;
+            }
+        }
+        """
         with gr.Blocks(css=custom_css, fill_width=True, delete_cache=(60, 1200), fill_height=True, theme=gr.themes.Soft()) as self.app:
             with gr.Row():
                 #with gr.Sidebar(width="35%", open=False) as self.col_left:
@@ -327,15 +338,15 @@ class App:
                     with gr.Tabs(visible=False) as self.col_left_group:
                         with gr.TabItem("Start") as tab_start:
                             self.start.render()
-                        with gr.TabItem("Image parameters") as tab_style_adjustment:
+                        with gr.TabItem("Image Appearance") as tab_style_adjustment:
                             self.style_adjustment.render()
-                        with gr.TabItem("Cell parameters") as tab_parameter_selection:
+                        with gr.TabItem("Cell Settings") as tab_parameter_selection:
                             self.parameter_selection.render()
                     self._init_inputs(index=0)
                     with gr.Accordion("", open=True) as self.examples_accordion:
                         images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
                         self.examples_markdown.render()
-                        self.examples_gallery = gr.Gallery(value=images, label="Dataset examples", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
+                        self.examples_gallery = gr.Gallery(value=images, label="Presets", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
                         self.timer.render()
                         self.tick_state.render()
                         with gr.Column(scale=1):

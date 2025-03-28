@@ -8,7 +8,7 @@ seaborn==0.13.2
 tqdm==4.67.1
 albumentations==2.0.4
 pylint==3.3.4
-gradio==5.19.0
+gradio==5.23.1
 gradio_rangeslider==0.0.8
 umap-learn==0.5.7
 # pip install git+https://github.com/openai/CLIP.git

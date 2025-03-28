@@ -100,23 +100,23 @@ class StyleAdjustment:
         self.filter_images = gr.Checkbox(label="Filter background images", render=False, interactive=True)
         self.background_button = gr.Button("Generate test backgrounds", render=False, interactive=True)
         self.background_output = gr.Gallery(label="Sample backgrounds", preview=False, columns=3, render=False, interactive=False)
-        self.contrast_variation = gr.Slider(label="Contrast deviation", minimum=0.0, maximum=1.0, render=False, interactive=True)
-        self.brightness_variation = gr.Slider(label="Brightness deviation", minimum=0.0, maximum=1.0, render=False, interactive=True)
+        self.contrast_variation = gr.Slider(label="Contrast", minimum=0.0, maximum=1.0, render=False, interactive=True)
+        self.brightness_variation = gr.Slider(label="Brightness", minimum=0.0, maximum=1.0, render=False, interactive=True)
         self.horizontal_flip_checkbox = gr.Checkbox(label="Horizontal flip", render=False, interactive=True)
         self.vertical_flip_checkbox = gr.Checkbox(label="Vertical flip", render=False, interactive=True)
         
         self.color_image_input = gr.Image(type="numpy", label="Upload your reference image", interactive=True, render=False)
-        self.color_display = gr.ColorPicker(label="Colour Display", render=False, interactive=True)
+        self.color_display = gr.ColorPicker(label="Colour Display", render=False, interactive=True, container=True)
         self.get_color_button = gr.Button("Get colour", render=False, interactive=True)
         
-        self.spermatozoon_head_color = gr.ColorPicker(label="Head", render=False, interactive=True)
-        self.spermatozoon_head_highlight_color = gr.ColorPicker(label="Head highlight", render=False, interactive=True)
-        self.spermatozoon_neck_color = gr.ColorPicker(label="Neck", render=False, interactive=True)
-        self.spermatozoon_tail_color = gr.ColorPicker(label="Tail", render=False, interactive=True)
-        self.spermatozoon_droplet_color = gr.ColorPicker(label="Droplet", render=False, interactive=True)
-        self.debris_color = gr.ColorPicker(label="Debris", render=False, interactive=True)
-        self.shadow_start_color = gr.ColorPicker(label="Shadow start", render=False, interactive=True)
-        self.shadow_end_color = gr.ColorPicker(label="Shadow end", render=False, interactive=True)
+        self.spermatozoon_head_color = gr.ColorPicker(label="Head", render=False, interactive=True, container=True)
+        self.spermatozoon_head_highlight_color = gr.ColorPicker(label="Head highlight", render=False, interactive=True, container=True)
+        self.spermatozoon_neck_color = gr.ColorPicker(label="Neck", render=False, interactive=True, container=True)
+        self.spermatozoon_tail_color = gr.ColorPicker(label="Tail", render=False, interactive=True, container=True)
+        self.spermatozoon_droplet_color = gr.ColorPicker(label="Droplet", render=False, interactive=True, container=True)
+        self.debris_color = gr.ColorPicker(label="Debris", render=False, interactive=True, container=True)
+        self.shadow_start_color = gr.ColorPicker(label="Shadow start", render=False, interactive=True, container=True)
+        self.shadow_end_color = gr.ColorPicker(label="Shadow end", render=False, interactive=True, container=True)
         self.spermatozoon_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
         self.debris_scale_slider = gr.Slider(label="Debris scale", minimum=0.1, maximum=100, render=False, interactive=True)
         self.shadow_offset_slider = gr.Slider(label="Shadow offset", minimum=-10, maximum=10, render=False, interactive=True)
@@ -149,15 +149,22 @@ class StyleAdjustment:
                     self.spermatozoon_tail_color.render()
                     self.spermatozoon_droplet_color.render()
                     
-                gr.Markdown(" ### Shadow an debris colours")
+                gr.Markdown(" ### Debris an shadow colours")
                 with gr.Row():
                     self.debris_color.render()
                     self.shadow_start_color.render()
                     self.shadow_end_color.render()
+                gr.HTML("""
+                <style>
+                    input[type="color"] {
+                        outline: 2px solid #ff8800;
+                        border-radius: 4px;
+                        padding: 2px;
+                    }
+                </style>
+                """)
                     
-                    
-            with gr.Accordion("Advanced style parameters", open=False):
-                gr.Markdown(" ### Scales and other parameters")
+            with gr.Accordion("Advanced appearance parameters", open=False):
                 with gr.Row():
                     self.spermatozoon_scale_slider.render()
                     self.debris_scale_slider.render()

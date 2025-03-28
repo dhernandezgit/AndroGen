@@ -15,7 +15,7 @@ class ParameterSelection:
         self.species_editor_save_text = gr.Textbox(label="Species name", visible=False, render=False, interactive=True)
         self.species_editor_save_button = gr.Button("Save", visible=False, render=False, interactive=True)
         self.morphologies_checkboxes = gr.CheckboxGroup(choices=get_species_dict().keys(), label="Morphologies", render=False, interactive=True) 
-        self.debris_checkbox = gr.Checkbox(label="Debris rendering", render=False, interactive=True)
+        self.debris_checkbox = gr.Checkbox(label="Enable debris generation", render=False, interactive=True)
         
     def read_examples(self, examples_data, index):
         example = examples_data["parameter_selection"][index]
@@ -45,9 +45,9 @@ class ParameterSelection:
         
     def render(self):
         with gr.Group():
-            with gr.Accordion("Measurement JSON", open=True):
+            with gr.Accordion("Species configuration", open=True):
                 self.species_dropdown.render()
-                with gr.Accordion("JSON viewer", open=False):
+                with gr.Accordion("Settings explorer", open=False):
                     self.species_json_viewer.render()
                     self.species_json_editor.render()
                 with gr.Column():
@@ -55,7 +55,6 @@ class ParameterSelection:
                     self.species_editor_save_button.render()
             with gr.Accordion("Cell morphology and count", open=True):
                 self.morphologies_checkboxes.render()
-                gr.Markdown("### Number of elements")
                 self.n_spermatozoa = RangeSlider(label="N spermatozoa", minimum=0, maximum=250)
                 self.debris_checkbox.render()
                 self.n_debris = RangeSlider(label="N debris", minimum=0, maximum=500)

@@ -44,7 +44,7 @@ class DataGeneration:
             self.output.render()
             self.generate_button.render()
                 
-            with gr.Accordion("Create synthetic dataset", open=True, visible=False) as self.advanced_settings:
+            with gr.Accordion("", open=True, visible=False) as self.advanced_settings:
                 with gr.Row():
                     self.dataset_name.render()
                     self.save_folder.render()

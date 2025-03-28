@@ -82,7 +82,7 @@ class QualityEvaluator:
         self.metrics = {
             "FID": FIDScore(),
             "KID": KIDScore(),
-            #"IS": InceptionScore()
+            "IS": InceptionScore()
         }
 
     def load_images_from_directory(self, directory, img_size=(299, 299), max_images=10):
@@ -124,23 +124,24 @@ if __name__ == "__main__":
     #    "SVIA": "data/quality_score/svia"
     #}
     # Define datasets
+    ref = "BOSS-Ref"
     datasets = {
-        "Real-Test": "data/quality_score/real-test",
-        "Synthetic": "/media/daniel/TOSHIBA_EXT/BOSS_1/frames",
+        "BOSS-Test": "/media/daniel/TOSHIBA_EXT/DatasetsMetrics/BOSS/set2",
+        "BOSS-Synthetic": "/media/daniel/TOSHIBA_EXT/SBOSSV0/set1",
     }
-    reference_dataset = "data/quality_score/real"
+    reference_dataset = "/media/daniel/TOSHIBA_EXT/DatasetsMetrics/BOSS/set1"
 
     #Load reference and dataset images
     real_images = evaluator.load_images_from_directory(reference_dataset)
     dataset_samples = {
-        "Real": real_images,  # Add reference dataset
+        ref: real_images,  # Add reference dataset
         **{name: evaluator.load_images_from_directory(path) for name, path in datasets.items()}
     }
 
     # Evaluate metrics (excluding Real vs Real comparison)
     results = {}
     for name, images in dataset_samples.items():
-        if name != "Real":
+        if name != ref:
             results[name] = evaluator.evaluate(real_images, images)
 
     # Dynamically extract metric names
@@ -184,7 +185,7 @@ if __name__ == "__main__":
             ax.text(j, value + 0.01, f"{value:.2f}", ha='center', va='bottom', fontsize=10)
 
     # Save the plot
-    output_file = "first_comparison_figure_with_metrics.png"
+    output_file = "BOSS_comparison_figure_with_metrics.png"
     plt.tight_layout()
     plt.savefig(output_file, dpi=300)
     print(f"Figure saved to {output_file}")

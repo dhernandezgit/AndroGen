@@ -7,7 +7,6 @@ class BackgroundGenerator:
     def __init__(self):
         self.generation_method = None
         self.image_paths = None
-        self.single_image_path = None
     
     def setGenerationMethod(self, method, paths=None):
         """
