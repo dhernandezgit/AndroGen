@@ -1,9 +1,6 @@
 # AndroGen – Synthetic Sperm Image Generator
- 
-✅ The codebase is complete and fully functional.  
-📄 Deployment documentation is currently under preparation and will be available in the coming days.
- 
-Thank you for your interest in **AndroGen**. Stay tuned for detailed setup instructions and usage examples.
+
+ **AndroGen** is an open-source synthetic data generation tool for automated sperm analysis from microscopic images. It allows researchers to generate highly customizable datasets without relying on real data or training generative models.
 
 ## ✨ Key Features
 
