@@ -4,7 +4,7 @@ set -e  # Exit on any error
 # Step 1: Create virtual environment if not exists
 if [ ! -d ".venv" ]; then
     echo "[1/4] Creating Python 3.10 virtual environment..."
-    python3.10 -m venv .venv
+    python3 -m venv .venv
 else
     echo "[1/4] Virtual environment already exists, skipping."
 fi
