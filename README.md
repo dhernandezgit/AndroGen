@@ -15,7 +15,7 @@ Thank you for your interest in **AndroGen**. Stay tuned for detailed setup instr
 - 🧪 Quantitatively and qualitatively validated using FID/KID metrics.
 - 🧬 Modular and extensible: easily add new species, environments, motion patterns, and artifacts.
 
-## 📦 Installation
+## 📦 Installation and 🚀 Usage
 
 ```bash
 git clone https://github.com/dhernandezgit/AndroGen.git
@@ -23,21 +23,11 @@ cd AndroGen
 ./launch.sh
 ```
 
-> Requires Python 3.10.
-
-## 🚀 Usage
-
-Run the GUI locally:
-
-```bash
-python run.py
-```
-
 From the GUI, you can:
 
 1. Load predefined configurations based on SVIA, VISEM, or BOSS datasets.
 2. Adjust visual parameters: background, brightness, contrast, blur, color, depth distribution.
-3. Define morphology: species, sperm classes, dimensions, mobility, and more.
+3. Define morphology: species, spermatozoa classes, dimensions, mobility, and more.
 4. Generate customized images or sequences and save them to your target directory.
 
 ## 📈 Validation
