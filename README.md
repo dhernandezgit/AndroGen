@@ -50,7 +50,6 @@ AndroGen has been validated by replicating SVIA, VISEM, and BOSS datasets. Synth
 
 Results show strong similarity to real datasets at low computational cost and without real data.
 
-## 🧪 Sample Images
 
 | SVIA Real | SVIA Synthetic | VISEM Real | VISEM Synthetic | BOSS Real | BOSS Synthetic |
 |-----------|----------------|------------|------------------|-----------|----------------|
