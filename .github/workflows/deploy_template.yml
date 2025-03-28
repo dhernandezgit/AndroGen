@@ -1,0 +1,41 @@
+name: Sync Submodule to Docs
+
+on:
+  push:
+    paths:
+      - 'academic-template/**'
+      - '.github/workflows/deploy-template.yml'
+      - '.gitmodules'
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Copy submodule content to /docs
+        run: |
+          rm -rf docs
+          mkdir docs
+          cp -r academic-template/* docs/
+          cp -r academic-template/.* docs/ || true  # Copy hidden files like .nojekyll, .htaccess
+
+      - name: Commit and push if changed
+        run: |
+          git add docs
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Sync submodule to docs"
+            git push
+          fi
