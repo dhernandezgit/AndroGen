@@ -20,7 +20,7 @@ Thank you for your interest in **AndroGen**. Stay tuned for detailed setup instr
 ```bash
 git clone https://github.com/dhernandezgit/AndroGen.git
 cd AndroGen
-pip install -r requirements.txt
+./launch.sh
 ```
 
 > Requires Python 3.10.
