@@ -113,7 +113,7 @@ class App:
         real_path = os.path.join("resources/examples/predefined_background_file",f"{example_name}.png")
         bg_path = os.path.join("resources/examples/predefined_background", example_name)
         
-        shutil.copy("/home/daniel/Documents/Projects/Tesis/AndroGen/resources/sample/frames/000000_000000.png", generated_path)
+        shutil.copy("resources/sample/frames/000000_000000.png", generated_path)
         cv2.imwrite(real_path, style_adjustment_example[7])
         os.makedirs(bg_path, exist_ok=True)
         for f in style_adjustment_example[0]:
