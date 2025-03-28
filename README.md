@@ -2,6 +2,8 @@
 
  **AndroGen** is an open-source synthetic data generation tool for automated sperm analysis from microscopic images. It allows researchers to generate highly customizable datasets without relying on real data or training generative models.
 
+ ![svia-syn](docs/static/images/adrogen_gui_dark.png)
+
 ## ✨ Key Features
 
 - 📷 Synthetic generation of microscopic sperm images for multiple animal species.
