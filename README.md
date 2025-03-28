@@ -10,9 +10,8 @@ Thank you for your interest in **AndroGen**. Stay tuned for detailed setup instr
 - 📷 Synthetic generation of microscopic sperm images for multiple animal species.
 - 🔧 Intuitive GUI with preloaded dataset configurations (SVIA, VISEM, BOSS).
 - ⚙️ Full customization: morphology, concentration, movement, background, and debris.
-- 🖥️ Compatible with both local and cloud environments via Gradio (React frontend + Python backend).
-- 📂 Exports standard datasets with images, segmentation masks, and annotations (PNG, TXT).
-- 📊 Supports CASA (Computer-Aided Sperm Analysis) systems.
+- 🖥️ Compatible with both local and cloud environments via Gradio.
+- 📂 Exports datasets with images, segmentation masks, and annotations (PNG, TXT).
 - 🧪 Quantitatively and qualitatively validated using FID/KID metrics.
 - 🧬 Modular and extensible: easily add new species, environments, motion patterns, and artifacts.
 
@@ -24,7 +23,7 @@ cd AndroGen
 pip install -r requirements.txt
 ```
 
-> Requires Python 3.8 or above.
+> Requires Python 3.10.
 
 ## 🚀 Usage
 
