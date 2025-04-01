@@ -28,7 +28,7 @@ git clone https://github.com/dhernandezgit/AndroGen.git
 cd AndroGen
 powershell .\launch.ps1
 ```
-From the GUI, you can:
+And access [this URL](http://127.0.0.1:7860/) through your preferred explorer. From the GUI, you can:
 
 1. Load predefined configurations based on SVIA, VISEM, or BOSS datasets.
 2. Adjust visual parameters: background, brightness, contrast, blur, color, depth distribution.
