@@ -15,13 +15,19 @@
 - 🧬 Modular and extensible: easily add new species, environments, motion patterns, and artifacts.
 
 ## 📦 Installation and 🚀 Usage
-
+### Linux version
 ```bash
 git clone https://github.com/dhernandezgit/AndroGen.git
 cd AndroGen
 ./launch.sh
 ```
-
+or
+### Windows version
+```bash
+git clone https://github.com/dhernandezgit/AndroGen.git
+cd AndroGen
+powershell .\launch.ps1
+```
 From the GUI, you can:
 
 1. Load predefined configurations based on SVIA, VISEM, or BOSS datasets.
