@@ -59,7 +59,7 @@ class App:
         self.example_text = gr.Textbox(placeholder="Preset 1", label="Custom preset name", interactive=True, render=False, visible=False)
         self.examples_save_button = gr.Button("Save current configuration as preset 💾", render=False, interactive=True, visible=False)
         self.examples_markdown = gr.Markdown("# Click on an example to start", render=False, visible=True)
-        self.timer = gr.Timer(active=False, value=2, render=False)
+        self.timer = gr.Timer(active=False, value=1, render=False)
         self.tick_state = gr.State(value=False, render=False)
         self.init_components()
         
@@ -282,16 +282,16 @@ class App:
             
         save_gif(os.path.join(self.test_sequence_path, "frames"), 0)
         if n_frames > 1:
-            return [self.test_gif_path] + [os.path.join(self.test_sequence_path, "frames", p) for p in np.random.choice(os.listdir(os.path.join(self.test_sequence_path, "frames")), extra_images)]
+            return self.test_gif_path# + [os.path.join(self.test_sequence_path, "frames", p) for p in np.random.choice(os.listdir(os.path.join(self.test_sequence_path, "frames")), extra_images)]
         else:
-            return [os.path.join(self.test_sequence_path, "frames", p) for p in os.listdir(os.path.join(self.test_sequence_path, "frames"))]
+            return [os.path.join(self.test_sequence_path, "frames", p) for p in os.listdir(os.path.join(self.test_sequence_path, "frames"))][0]
         
         
     def _tick(self, state):
         return [not state, gr.update(active = False)]
     
     def _generate_sequence_timer(self, n_frames, extra_images = 9):
-        return [self._generate_sequence(n_frames=25, extra_images = 9, yield_progress=True)]
+        return [self._generate_sequence(n_frames=n_frames, extra_images = 9, yield_progress=True)]
         
     def _generate_dataset(self, dataset_name, save_folder, n_sequences, n_frames_sequence, seed=42):
         #np.random.seed(int(seed))
@@ -346,7 +346,7 @@ class App:
                     with gr.Accordion("", open=True) as self.examples_accordion:
                         images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
                         self.examples_markdown.render()
-                        self.examples_gallery = gr.Gallery(value=images, label="Presets", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
+                        self.examples_gallery = gr.Gallery(value=images, type="pil", label="Presets", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
                         self.timer.render()
                         self.tick_state.render()
                         with gr.Column(scale=1):

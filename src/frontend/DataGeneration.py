@@ -28,7 +28,8 @@ class DataGeneration:
 
     def init_components(self):
         # Original Gradio components from DataGeneration section
-        self.output = gr.Gallery(label="Output", preview=True, columns=3, interactive=False, render=False, visible=False, scale=7, selected_index=0)
+        #self.output = gr.Gallery(label="Sample preview", preview=False, allow_preview=False, columns=1, rows=1, interactive=False, render=False, visible=False, scale=7, selected_index=0)
+        self.output = gr.Image(label="Output", interactive=False, render=False)
         #self.output = ImageSlider(value=["data/quality_score/real-test/9.png", "data/quality_score/new_synthetic/frames/000000_000003.png"], label="Output", interactive=False, render=False)
         self.generate_button = gr.Button("Generate sample 🖼️", render=False, visible=False)
         self.create_dataset_button = gr.Button("Create dataset 🗃️", render=False)
