@@ -114,7 +114,7 @@ class App:
         bg_path = os.path.join("resources/examples/predefined_background", example_name)
         
         shutil.copy("resources/sample/frames/000000_000000.png", generated_path)
-        cv2.imwrite(real_path, style_adjustment_example[7])
+        cv2.imwrite(real_path, cv2.cvtColor(style_adjustment_example[7], cv2.COLOR_BGR2RGB))
         os.makedirs(bg_path, exist_ok=True)
         for f in style_adjustment_example[0]:
             shutil.copy(f, os.path.join(bg_path, f.split("/")[-1]))
