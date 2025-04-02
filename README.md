@@ -55,7 +55,7 @@ Results show strong similarity to real datasets at low computational cost and wi
 
 **Enterprise License**: Designed for commercial use, this license permits using this software for commercial solutions, bypassing the open-source requirements of AGPL-3.0. Please contact us for more details.
 
-## Founding
+## Acknowledgments
 This work was supported by:
 
 **R&D project TED2021-129162B-C22**, funded by MICIU/AEI/ 10.13039/501100011033/
