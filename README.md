@@ -21,7 +21,7 @@ git clone https://github.com/dhernandezgit/AndroGen.git
 cd AndroGen
 ./launch.sh
 ```
-or
+
 ### Windows version
 ```bash
 git clone https://github.com/dhernandezgit/AndroGen.git
@@ -50,10 +50,21 @@ Results show strong similarity to real datasets at low computational cost and wi
 | ![svia-syn](docs/static/images/svia_long_compressed.gif) | ![visem-syn](docs/static/images/visem_long_compressed.gif) | ![boss-real](docs/static/images/boss_long_compressed.gif) |
 
 
-# License
+## License
 **AGPL-3.0 License**: This open-source license is ideal for students and researchers, promoting open collaboration and knowledge sharing. See the LICENSE file for more details.
 
 **Enterprise License**: Designed for commercial use, this license permits using this software for commercial solutions, bypassing the open-source requirements of AGPL-3.0. Please contact us for more details.
+
+## Founding
+This work was supported by:
+
+**R&D project TED2021-129162B-C22**, funded by MICIU/AEI/ 10.13039/501100011033/
+and the European Union NextGenerationEU/ PRTR
+
+**R&D project PID2021-128362OB-I00**, funded by MICIU/AEI/ 10.13039/501100011033/
+and FEDER/UE.
+
+![founding](docs/static/images/MICIU+NextG+PRTR+AEI.jpg)
 
 ## 👥 Authors
 
@@ -63,3 +74,7 @@ Results show strong similarity to real datasets at low computational cost and wi
 - Raúl Cabido  - `raul.cabido@urjc.es`
 
 Universidad Rey Juan Carlos, Móstoles, Spain
+
+
+
+
