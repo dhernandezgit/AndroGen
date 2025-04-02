@@ -47,7 +47,7 @@ Results show strong similarity to real datasets at low computational cost and wi
 
 | SVIA Synthetic | VISEM Synthetic | BOSS Synthetic |
 |----------------|-----------------|----------------|
-| ![svia-syn](docs/static/images/svia_synsample.gif) | ![visem-syn](docs/static/images/visem_synsample.gif) | ![boss-real](docs/static/images/boss_synsample.gif) |
+| ![svia-syn](docs/static/images/svia_long_compressed.gif) | ![visem-syn](docs/static/images/visem_long_compressed.gif) | ![boss-real](docs/static/images/boss_long_compressed.gif) |
 
 
 # License
