@@ -10,7 +10,7 @@ import cv2
 import configparser
 import threading
 import matplotlib.pyplot as plt
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool, cpu_count, get_context
 from itertools import islice
 
 from src.backend.SpermatozoonFactory import SpermatozoonFactory
@@ -115,10 +115,15 @@ class SequenceGenerator:
         shadow_xs, shadow_ys, shadow_sizes, shadow_rgba_colors, blurs = np.array([]), np.array([]), np.array([]), np.empty((0,4)), np.array([])
         highlight_xs, highlight_ys, highlight_sizes, highlight_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
         full_xs, full_ys, full_sizes, full_rgba_colors = np.array([]), np.array([]), np.array([]), np.empty((0,4))
+        
+        raw_bboxes = []
+        
         for s in spermatozoa:
             
             # Generate and render the spermatozoon
-            xs, ys, sizes, rgba_colors = s.calculate_movement(t=t)
+            xs, ys, sizes, rgba_colors, head_bbs = s.calculate_movement(t=t)
+            raw_bboxes.append(head_bbs)
+
             element_xs = np.concatenate((element_xs, xs))
             element_ys = np.concatenate((element_ys, ys))
             element_sizes = np.concatenate((element_sizes, sizes))
@@ -139,7 +144,7 @@ class SequenceGenerator:
             
         for d in debrises:
             # Generate and render the spermatozoon
-            xs, ys, sizes, rgba_colors = d.calculate_movement(t=t)
+            xs, ys, sizes, rgba_colors, head_bbs = d.calculate_movement(t=t)
             element_xs = np.concatenate((element_xs, xs))
             element_ys = np.concatenate((element_ys, ys))
             element_sizes = np.concatenate((element_sizes, sizes))
@@ -206,6 +211,40 @@ class SequenceGenerator:
         
         cv2.imwrite(os.path.join(save_path, "frames", name), blurred_image.astype(np.uint8))
         
+        img_width, img_height = self.params["Sequence.resolution"]["resolution"]
+        yolo_labels = []
+
+        for bbox in raw_bboxes:
+            x_min, y_min, x_max, y_max = bbox
+            
+            # Convertir a (centro_x, centro_y, ancho, alto)
+            box_width = x_max - x_min
+            box_height = y_max - y_min
+            x_center = x_min + box_width / 2
+            y_center = y_min + box_height / 2
+            
+            # Normalizar coordenadas
+            x_center_norm = x_center / img_width
+            y_center_norm = y_center / img_height
+            width_norm = box_width / img_width
+            height_norm = box_height / img_height
+            
+            # Ajustar para aumentos de datos (volteos)
+            if horizontal_flip[0]:
+                x_center_norm = 1.0 - x_center_norm
+            if vertical_flip[0]:
+                y_center_norm = 1.0 - y_center_norm
+            
+            # Asumimos que la clase "spermatozoon" es la ID 0
+            class_id = 0
+            yolo_labels.append(f"{class_id} {x_center_norm} {y_center_norm} {width_norm} {height_norm}")
+
+        # Guardar en el archivo .txt
+        txt_filename = name.replace('.png', '.txt')
+        txt_save_path = os.path.join(save_path, "labels", txt_filename)
+        with open(txt_save_path, 'w') as f:
+            f.write("\n".join(yolo_labels))
+        
     def generate_sequence(self, output_dir: str, yield_progress=False):
         os.makedirs(output_dir, exist_ok=True)
         os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
@@ -228,7 +267,8 @@ class SequenceGenerator:
         num_workers = min(cpu_count(), len(tasks))  # Use the lesser of CPU count or task size
         batch_size = max(1, len(tasks) // (10 * num_workers))  # Adjust batch size for efficiency
         
-        with Pool(processes=num_workers) as pool:
+
+        with get_context("spawn").Pool(processes=num_workers) as pool:
             # Process tasks in chunks for better resource utilization
             for _ in tqdm.tqdm(
                 pool.imap_unordered(generate_frame_wrapper, tasks, chunksize=batch_size),
@@ -241,6 +281,51 @@ class SequenceGenerator:
                     pass
         self.id += 1
         
+        
+    def generate_sequence_solution(self, output_dir: str):
+        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "frames"), exist_ok=True)
+        self.sequence_config.update()
+        self.params = self.sequence_config.getParameters()
+        
+        elements = self._generate_elements()
+        background, spermatozoa, debrises = elements
+        
+        # Launch threads in a loop
+        for t in tqdm.tqdm(range(self.num_frames)):
+            self.generate_frame(output_dir, f"{t:06d}.png", t, elements)
+    
+    import os
+
+    def generate_sequence_parallel(self, output_dir: str):
+        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "labels"), exist_ok=True)
+        os.makedirs(os.path.join(output_dir, "frames"), exist_ok=True)
+
+        self.sequence_config.update()
+        self.params = self.sequence_config.getParameters()
+
+        elements = self._generate_elements()
+
+        tasks = [
+            (self, output_dir, f"{self.id:06d}_{t:06d}.png", t, elements)
+            for t in range(self.num_frames)
+        ]
+
+        num_workers = min(cpu_count(), len(tasks))
+        batch_size = max(1, len(tasks) // (10 * num_workers))
+
+        with get_context("spawn").Pool(processes=num_workers) as pool:
+            for _ in tqdm.tqdm(
+                pool.imap_unordered(generate_frame_wrapper, tasks, chunksize=batch_size),
+                total=len(tasks),
+                desc="Rendering frames"
+            ):
+                pass
+            
+            self.id += 1
+
             
 if __name__ == "__main__":
     config_path = os.path.join(os.getcwd(), 'cfg', 'config.ini')
@@ -254,7 +339,6 @@ if __name__ == "__main__":
     image_paths = [os.path.join(paths, p) for p in image_paths]
     bgg = BackgroundGenerator()
     bgg.setGenerationMethod('list', paths=image_paths)
-
 
     sg = SequenceGenerator(25, sequence_config, sf, df, bgg)
     sg.generate_sequence("results_new")

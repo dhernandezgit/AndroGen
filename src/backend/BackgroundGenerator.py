@@ -20,16 +20,19 @@ class BackgroundGenerator:
         self.generation_method = method
         self.image_paths = paths
 
-    def _generateFromList(self, n_images=10):
+    def _generateFromList(self, n_filter_images=10):
         """
         Select a maximum of 10 randomly chosen image files from the list,
         calculate the median of these images, and return it.
         """
+        
+        n_filter_images = max(n_filter_images, 4)
+        
         if not self.image_paths or len(self.image_paths) == 0:
             raise ValueError("Image paths list is empty or not provided.")
         
         # Select a maximum of 20 random image paths
-        selected_paths = random.sample(self.image_paths, min(n_images, len(self.image_paths)))
+        selected_paths = random.sample(self.image_paths, min(n_filter_images, len(self.image_paths)))
         
         ref_img = cv2.imread(selected_paths[0])
         ref_shape = ref_img.shape
@@ -65,12 +68,12 @@ class BackgroundGenerator:
         
         return img
 
-    def getBackground(self, resolution=None):
+    def getBackground(self, resolution=None, n_filter_images=10):
         """
         Return the background image based on the selected generation method.
         """
         if self.generation_method == 'list':
-            background = self._generateFromList()
+            background = self._generateFromList(n_filter_images=n_filter_images)
         elif self.generation_method == 'single':
             background = self._setFromImage()
         else:

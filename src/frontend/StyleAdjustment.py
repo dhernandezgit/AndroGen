@@ -16,6 +16,7 @@ class StyleAdjustment:
         example = examples_data["style_adjustment"][index]
         return [
             [os.path.join(example["files"], p) for p in os.listdir(example["files"])],
+            example["n_background_filter"],
             example["filter_images"],
             float(example["contrast"]),
             float(example["brightness"]),
@@ -65,12 +66,14 @@ class StyleAdjustment:
             gr.update(value=examples[19], interactive=True),
             gr.update(value=examples[20], interactive=True),
             gr.update(value=examples[21], interactive=True),
-            gr.update(value=examples[22], interactive=True)
+            gr.update(value=examples[22], interactive=True),
+            gr.update(value=examples[23], interactive=True)
         ]
         
     def get_values(self):
         return [
             self.input_images.value,
+            self.n_background_filter.value,
             self.filter_images.value,
             self.contrast_variation.value,
             self.brightness_variation.value,
@@ -97,6 +100,7 @@ class StyleAdjustment:
     def init_components(self):
         # Original Gradio components from StyleAdjustment section
         self.input_images = gr.File(label="Upload Images", file_types=["image"], type="filepath", file_count="multiple", elem_id="file-uploader", interactive=True, render=False)
+        self.n_background_filter = gr.Slider(label="Filter size", minimum=2, maximum=100, render=False, step=1, interactive=True)
         self.filter_images = gr.Checkbox(label="Filter background images", render=False, interactive=True)
         self.background_button = gr.Button("Generate test backgrounds", render=False, interactive=True)
         self.background_output = gr.Gallery(label="Sample backgrounds", preview=False, columns=3, render=False, interactive=False)
@@ -117,8 +121,8 @@ class StyleAdjustment:
         self.debris_color = gr.ColorPicker(label="Debris", render=False, interactive=True, container=True)
         self.shadow_start_color = gr.ColorPicker(label="Shadow start", render=False, interactive=True, container=True)
         self.shadow_end_color = gr.ColorPicker(label="Shadow end", render=False, interactive=True, container=True)
-        self.spermatozoon_scale_slider = gr.Slider(label="Sperm scale", minimum=0.1, maximum=100, render=False, interactive=True)
-        self.debris_scale_slider = gr.Slider(label="Debris scale", minimum=0.1, maximum=100, render=False, interactive=True)
+        self.spermatozoon_scale_slider = gr.Slider(label="Sperm scale", minimum=0.10, maximum=100, render=False, interactive=True)
+        self.debris_scale_slider = gr.Slider(label="Debris scale", minimum=0.10, maximum=100, render=False, interactive=True)
         self.shadow_offset_slider = gr.Slider(label="Shadow offset", minimum=-10, maximum=10, render=False, interactive=True)
         self.shadow_scale_slider = gr.Slider(label="Shadow scale", minimum=0.0, maximum=10.0, render=False, interactive=True)
         self.n_points_render_slider = gr.Slider(label="N points to render", minimum=10, maximum=1000, render=False, interactive=True)
@@ -127,6 +131,7 @@ class StyleAdjustment:
         with gr.Group():
             with gr.Accordion("Background generation", open=True):
                 self.input_images.render()
+                self.n_background_filter.render()
                 self.background_button.render()
                 self.background_output.render()
                 self.filter_images.render()

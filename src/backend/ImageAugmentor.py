@@ -60,11 +60,13 @@ class ImageAugmentor:
         for augmented_image in augmented_images:
             transform_names = [aug["__class_fullname__"] for aug in augmented_image["replay"]["transforms"]]
             if "HorizontalFlip" in transform_names:
-                horizontal_flips.append(True)
+                horizontal_flip_index = transform_names.index("HorizontalFlip")
+                horizontal_flips.append(augmented_image["replay"]["transforms"][horizontal_flip_index]["applied"])
             else:
                 horizontal_flips.append(False)
             if "VerticalFlip" in transform_names:
-                vertical_flips.append(True)
+                vertical_flip_index = transform_names.index("VerticalFlip")
+                vertical_flips.append(augmented_image["replay"]["transforms"][vertical_flip_index]["applied"])
             else:
                 vertical_flips.append(False)
             #horizontal_flip_index = transform_names.index("HorizontalFlip")

@@ -190,7 +190,7 @@ class Spermatozoon:
         yt = self.y0 + np.cumsum(dy)
         return xt, yt, thetat
 
-    def calculate_movement(self, t=0):
+    def calculate_movement(self, t=0, head_bbox_scale=1.0):
         xs = np.zeros(self.n_points)
         ys = np.zeros(self.n_points)
         sizes = np.zeros(self.n_points)
@@ -235,6 +235,31 @@ class Spermatozoon:
         sizes[head_indices] = sizes_head.ravel()
         colors[head_indices] = colors_head
         alphas[head_indices] = alphas_head
+        
+        head_xs = xs[head_indices]
+        head_ys = ys[head_indices]
+        head_sizes = sizes[head_indices]
+        
+        # Calculate initial min/max coordinates considering the radius of each point
+        x_min = np.min(head_xs - head_sizes / 2)
+        y_min = np.min(head_ys - head_sizes / 2)
+        x_max = np.max(head_xs + head_sizes / 2)
+        y_max = np.max(head_ys + head_sizes / 2)
+
+        # Apply scaling if necessary
+        if head_bbox_scale != 1.0:
+            center_x = (x_min + x_max) / 2
+            center_y = (y_min + y_max) / 2
+            
+            width = (x_max - x_min) * head_bbox_scale
+            height = (y_max - y_min) * head_bbox_scale
+            
+            x_min = center_x - width / 2
+            y_min = center_y - height / 2
+            x_max = center_x + width / 2
+            y_max = center_y + height / 2
+            
+        head_bbox = (x_min, y_min, x_max, y_max)
         
         # Neck calculations
         if self.neck:
@@ -283,7 +308,7 @@ class Spermatozoon:
             alphas[index] = alphas_droplet
         # Combine colors and alphas into RGBA
         rgba_colors = np.concatenate((colors, alphas[:, None]), axis=1)
-        return np.array(xs[::-1]), np.array(ys[::-1]), np.array(sizes[::-1]), np.array(rgba_colors[::-1])
+        return np.array(xs[::-1]), np.array(ys[::-1]), np.array(sizes[::-1]), np.array(rgba_colors[::-1]), head_bbox
     
     
     def add_shadows(self, xs, ys, sizes, rgba_colors):

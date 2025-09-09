@@ -68,6 +68,7 @@ class App:
             
     def _init_inputs(self, index=0):
         self.input_list = [self.style_adjustment.input_images,
+                        self.style_adjustment.n_background_filter,
                         self.style_adjustment.filter_images,
                         self.style_adjustment.contrast_variation,
                         self.style_adjustment.brightness_variation,
@@ -114,11 +115,11 @@ class App:
         bg_path = os.path.join("resources/examples/predefined_background", example_name)
         
         shutil.copy("resources/sample/frames/000000_000000.png", generated_path)
-        cv2.imwrite(real_path, cv2.cvtColor(style_adjustment_example[7], cv2.COLOR_BGR2RGB))
+        cv2.imwrite(real_path, cv2.cvtColor(style_adjustment_example[8], cv2.COLOR_BGR2RGB))
         os.makedirs(bg_path, exist_ok=True)
         for f in style_adjustment_example[0]:
             shutil.copy(f, os.path.join(bg_path, f.split("/")[-1]))
-        style_adjustment_example = (bg_path,) + style_adjustment_example[1:7] + (real_path, generated_path,) + style_adjustment_example[9:]
+        style_adjustment_example = (bg_path,) + style_adjustment_example[1:8] + (real_path, generated_path,) + style_adjustment_example[10:]
         
         self.examples_data["names"].append(example_name)
         style_adjustment_example_dict = {}
@@ -144,7 +145,7 @@ class App:
         values = self._set_values(i=index)
         return values + [gr.update(scale = 4), gr.update(visible=True), gr.update(visible = True), gr.update(visible = True), gr.update(visible = True), gr.update(columns = [7]), gr.update(visible = True), gr.update(visible = True), gr.update(visible = False), gr.update(active = True)]
         
-    def _update_background_generator(self, images, contrast, brightness, horizontal_flip, vertical_flip, n_images_out=9):
+    def _update_background_generator(self, images, n_filter_images, contrast, brightness, horizontal_flip, vertical_flip, n_images_out=9):
         self.sequence_config.update()
         if len(images) < 1:  # Check if the list of images is empty
             raise gr.Error("Please select at least one image.")
@@ -159,7 +160,7 @@ class App:
                 ia = ImageAugmentor(contrast=contrast, brightness=brightness, horizontal_flip=horizontal_flip, vertical_flip=vertical_flip)
                 images_out = []
                 for n in range(n_images_out):
-                    bg = self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution'])
+                    bg = self.bgg.getBackground(resolution=self.sequence_config.getParameters()['Sequence.resolution']['resolution'], n_filter_images=n_filter_images)
                     images_out.append(ia.augment(bg, num_images=1)[0][0])
                 return images_out
             else:
@@ -344,7 +345,7 @@ class App:
                             self.parameter_selection.render()
                     self._init_inputs(index=0)
                     with gr.Accordion("", open=True) as self.examples_accordion:
-                        images = [(example[7], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
+                        images = [(example[8], self.examples_data["names"][i]) for i, example in enumerate(self.examples_processed)]
                         self.examples_markdown.render()
                         self.examples_gallery = gr.Gallery(value=images, type="pil", label="Presets", elem_id="examples-container", columns=3, interactive=True, height="10%", allow_preview=False)
                         self.timer.render()
@@ -378,9 +379,9 @@ class App:
             tab_style_adjustment.select(lambda: (gr.update(scale=4)), None, [self.col_left])
             tab_parameter_selection.select(lambda: (gr.update(scale=4)), None, [self.col_left])
             
-            self.style_adjustment.background_button.click(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
-            self.style_adjustment.input_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
-            self.style_adjustment.filter_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
+            self.style_adjustment.background_button.click(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.n_background_filter, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
+            self.style_adjustment.input_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.n_background_filter, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
+            self.style_adjustment.filter_images.change(self._update_background_generator, [self.style_adjustment.input_images, self.style_adjustment.n_background_filter, self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [self.style_adjustment.background_output])
             
             self.style_adjustment.contrast_variation.change(self._update_augmentation, [self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [])
             self.style_adjustment.brightness_variation.change(self._update_augmentation, [self.style_adjustment.contrast_variation, self.style_adjustment.brightness_variation, self.style_adjustment.horizontal_flip_checkbox, self.style_adjustment.vertical_flip_checkbox], [])

@@ -54,7 +54,7 @@ class DatasetMaker:
             if os.path.isdir(gif_dir):
                 shutil.rmtree(gif_dir)
         
-        for _ in self.sg.generate_sequence(self.output_dir, yield_progress=False):
+        for _ in self.sg.generate_sequence(self.output_dir, yield_progress=True):
             ...
         save_gif(sequence_dir_frames, n_seq=n_seq, save_path=os.path.join(gif_dir, f"{n_seq:06d}.gif"), duration=100, loop=0)
 
@@ -77,19 +77,19 @@ class DatasetMaker:
         progress.close()
         
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # Example usage
-    config_path = os.path.join(os.getcwd(), 'cfg', 'config.ini')
-    sequence_config = SequenceConfig(config_path)
+    #config_path = os.path.join(os.getcwd(), 'cfg', 'config.ini')
+    #sequence_config = SequenceConfig(config_path)
     
-    sf = SpermatozoonFactory(species_dict_path="cfg/species/sampleSpecie.json", style_config_path="cfg/styles/base.json")
-    df = DebrisFactory(debris_dict_path="cfg/debris.json", style_config_path="cfg/styles/base.json")
+    #sf = SpermatozoonFactory(species_dict_path="cfg/species/sampleSpecie.json", style_config_path="cfg/styles/base.json")
+    #df = DebrisFactory(debris_dict_path="cfg/debris.json", style_config_path="cfg/styles/base.json")
     
-    paths = "/home/daniel/Documents/Projects/Kubus/Morfología/Data/vids_processed"
-    image_paths = os.listdir(paths)
-    image_paths = [os.path.join(paths, p) for p in image_paths]
-    bgg = BackgroundGenerator()
-    bgg.setGenerationMethod('list', paths=image_paths)
+    #paths = "/home/daniel/Documents/Projects/Kubus/Morfología/Data/vids_processed"
+    #image_paths = os.listdir(paths)
+    #image_paths = [os.path.join(paths, p) for p in image_paths]
+    #bgg = BackgroundGenerator()
+    #bgg.setGenerationMethod('list', paths=image_paths)
 
-    dm = DatasetMaker(num_sequences=10, num_frames=100, sequence_config=sequence_config, sf=sf, df=df, bgg=bgg, output_dir="dataset")
-    dm.generate_dataset()
+    #dm = DatasetMaker(num_sequences=10, num_frames=100, sequence_config=sequence_config, sf=sf, df=df, bgg=bgg, output_dir="dataset")
+    #dm.generate_dataset()
